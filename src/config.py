@@ -4,11 +4,11 @@ class Config:
   def __init__(
     self,
     criterion,
-    model,
-    optimizer,
+    model: torch.nn.Module,
+    optimizer: torch.optim.Optimizer,
     epochs: int = 1,
     scheduler: torch.optim.lr_scheduler.LRScheduler = None,
-    learning_rate = 1e-3,
+    learning_rate: float = 1e-3,
     **kwargs
   ):
     self.epochs = epochs

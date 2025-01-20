@@ -3,14 +3,16 @@ from config import Config
 from architecture import Vit, SiameseModel, CCT
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
-from metrics import EER
+from metrics import EER, LR
 from loss import ContrastiveLoss
 import torch
 
-img_shape = (100, 150)
-out_dim = 10
+img_shape = (224, 224)
+out_dim = 64
 batch_size = 16
 shuffle_loader = True
+learning_rate = 1e-3
+patience = 7
 
 model = CCT(out_dim=out_dim, img_shape=img_shape)
 model = SiameseModel(model)
@@ -22,8 +24,10 @@ config = Config(
   shuffle_loader = True,
   epochs=1000,
   scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau,
-  learning_rate=1e-3,
+  learning_rate=learning_rate,
   img_shape = img_shape,
+  optimizer=torch.optim.Adam,
+  patience=patience
 )
 
 csv_path = "./splits.csv"
@@ -39,7 +43,7 @@ val_loader = DataLoader(val_loader, batch_size, shuffle=False)
 
 wandb_args = {
   "project": "mestrado-comparadora",
-  "name": "CCT R29 5k",
+  "name": "CCT R31 5k",
   "notes": "Primeiro modelo a ser treinado.",
   "config": config.config_dict()
 }
@@ -47,6 +51,7 @@ wandb_args = {
 log = Log(wandb_flag=True, wandb_args=wandb_args)
 log.create_metric("eer", EER(), True)
 log.create_metric("eer", EER(), False)
+log.create_metric("lr", LR(config.scheduler), True)
 
 train(
   config = config,
@@ -54,5 +59,6 @@ train(
   val_dataloader = val_loader,
   model = model,
   device = "cuda",
-  log = log
+  log = log,
+  patience = patience,
 )

@@ -42,6 +42,23 @@ class CCT(torch.nn.Module):  # modelo economico, aprende com menos dados
   def name(self):
     return "CCT_2"
 
+class EfficientNet(torch.nn.Module):
+  def __init__(self, out_dim: int = 64):
+    super(EfficientNet, self).__init__()
+    self.model = torchvision.models.efficientnet_b0(weights=torchvision.models.EfficientNet_B0_Weights.DEFAULT)
+    c = torch.nn.Sequential(
+      torch.nn.Dropout(0.2, True),
+      torch.nn.Linear(1280, out_dim)
+    )
+    self.model.classifier = c
+
+  def forward(self, x):
+    return self.model(x)
+  
+  @property
+  def name(self):
+    return "efficient_net_b0"
+
 class SiameseModel(torch.nn.Module):
   def __init__(self, model: torch.nn.Module):
     super(SiameseModel, self).__init__()

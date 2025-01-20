@@ -1,9 +1,9 @@
 from trainer import train
 from config import Config
-from architecture import Vit, SiameseModel, CCT
+from architecture import Vit, SiameseModel, CCT, EfficientNet
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
-from metrics import EER
+from metrics import EER, LR
 from loss import ContrastiveLoss
 import torch
 import wandb
@@ -14,8 +14,9 @@ metric = {
 }
 
 parameters_dict = {
-    "img_side_size": {'values': [100, 150, 200, 250]},
-    'optimizer': {'values': ['adam', 'sgd']},
+    "img_side_size": {'values': [50, 100, 150, 200, 250]},
+    # "img_side_size": {'value': 224},
+    'optimizer': {'values': ['adamw', 'sgd', 'adam']},
     'learning_rate': {
         # a flat distribution between 0 and 0.1
         'distribution': 'log_uniform',
@@ -48,12 +49,14 @@ def main(config=None):
     batch_size = int(wdb_config.batch_size)
 
     optimizers = {
-      "adam": torch.optim.AdamW,
+      "adamw": torch.optim.AdamW,
+      "adam": torch.optim.Adam,
       "sgd": torch.optim.SGD
     }
 
     shuffle_loader = True
 
+    # model = EfficientNet(out_dim=out_dim)
     model = CCT(out_dim=out_dim, img_shape=img_shape)
     model = SiameseModel(model)
 
@@ -64,8 +67,9 @@ def main(config=None):
       shuffle_loader = True,
       epochs=int(wdb_config.epochs),
       scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau,
-      learning_rate=1e-3,
-      img_shape = img_shape,
+      learning_rate=wdb_config.learning_rate,
+      img_width = img_shape[0],
+      img_height = img_shape[1],
       optimizer=optimizers[wdb_config.optimizer]
     )
 
@@ -90,6 +94,7 @@ def main(config=None):
     log = Log(wandb_flag=True)
     log.create_metric("eer", EER(), True)
     log.create_metric("eer", EER(), False)
+    log.create_metric("lr", LR(config.scheduler), True)
 
     train(
       config = config,
@@ -100,4 +105,5 @@ def main(config=None):
       log = log
     )
 
-wandb.agent("m4h3gjzy", function=main, count=None, project="mestrado-comparadora")
+# wandb.agent(sweep_id, function=main, count=None)
+wandb.agent("3qzddqf3", function=main, count=None, project="mestrado-comparadora")

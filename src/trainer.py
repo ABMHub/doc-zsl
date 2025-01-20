@@ -12,11 +12,28 @@ from log import Log
 
 TRAIN, VAL = True, False
 
+class EarlyStopping:
+  def __init__(self, patience: int):
+    self.patience = patience
+    self.best_loss = 1e8
+    self.best_loss_epoch = None
+
+  def should_we_stop(self, val_loss: float, current_epoch: int):
+    if val_loss < self.best_loss:
+      self.best_loss = val_loss
+      self.best_loss_epoch = current_epoch
+
+    elif (current_epoch - self.best_loss_epoch) > self.patience:
+      print("Early Stopping Break")
+      return True
+    
+    return False
+
 def pretty_print_dict(d: dict):
   for elem in d:
     print(f"\t{elem} - {d[elem]}")
 
-def train_epoch(epoch, data_loader, model, criterion, optimizer, device, log : Log, scheduler=None):
+def train_epoch(epoch, data_loader, model, criterion, optimizer, device, log : Log):
   model.train()
   # accelerator = Accelerator()
   # model, optimizer, data_loader = accelerator.prepare(model, optimizer, data_loader)
@@ -77,8 +94,10 @@ def train(
     val_dataloader,
     model,
     device,
-    log: Log
+    log: Log,
+    patience: int = None
   ):
+  ea = EarlyStopping(patience)
 
   epochs = config.epochs
   optimizer = config.optimizer
@@ -94,8 +113,7 @@ def train(
         criterion=ContrastiveLoss,
         optimizer=optimizer,
         device=device,
-        log=log,
-        scheduler=scheduler
+        log=log
       )
       
       val_epoch(
@@ -107,13 +125,22 @@ def train(
         log=log
       )
 
+      val_loss = log.val_metrics["loss"].get_current_info()
+
       if scheduler is not None:
-        scheduler.step(log.val_metrics["loss"].get_current_info())
+        scheduler.step(val_loss)
 
       log.end_epoch()
       train_dataloader.on_epoch_end()
       val_dataloader.on_epoch_end()
-      
+
+      if ea.should_we_stop(val_loss, i):
+        break
+
   except KeyboardInterrupt:
-    torch.save(model, "./model.pt")
+    print("Salvando modelo antes de encerrar...")
     raise
+
+  finally:
+    torch.save(model, "./model.pt")
+    print("Modelo salvo.")

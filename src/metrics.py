@@ -45,9 +45,20 @@ class EER(Metric):
 
   @staticmethod
   def calculate_eer(y_true, y_pred) -> tuple[float, float]:
-    fpr, tpr, threshold = roc_curve(y_true, y_pred, pos_label=1)
+    fpr, tpr, threshold = roc_curve(y_true, y_pred, pos_label=0)
     fnr = 1 - tpr
     eer_threshold = threshold[np.nanargmin(np.absolute((fnr - fpr)))]
     eer = fpr[np.nanargmin(np.absolute((fnr - fpr)))]
 
     return eer, eer_threshold
+
+class LR(Metric):
+  def __init__(self, scheduler, minimize=True):
+    super().__init__("learning_rate", minimize=minimize)
+    self.scheduler = scheduler
+
+  def add_data(self, *args, **kwargs):
+    pass
+
+  def get_current_info(self):
+    return self.scheduler.get_last_lr()[0]
