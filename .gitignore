@@ -1,1 +1,7 @@
 /data
+/separacao-rvl_cdip
+/clusters
+/wandb
+__pycache__
+*.pt
+*.ipynb

@@ -2,9 +2,11 @@ import os
 import random
 import operator
 
+from tqdm import tqdm
 import pandas as pd
 from PIL import Image
 
+import torch
 from torch.utils.data import Dataset as TorchDataset
 from torch.utils.data import DataLoader as TorchDataLoader
 from torchvision.transforms import ToTensor
@@ -25,30 +27,47 @@ class DocDataset(TorchDataset, DatasetTemplate):
     self,
     csv_path: os.PathLike,
     train: bool,
-    load_in_ram : bool = False
+    img_shape: tuple = (224, 224),
+    load_in_ram : bool = False,
+    mean: float = 0.9402,
+    std: float = 0.1724
   ):
     super().__init__()
     df = pd.read_csv(csv_path, index_col=False)
-    self.df = df[(df["train"] == int(train))].sample(frac=1).reset_index(drop=True)
+    self.df = df[(df["train"] == int(not train))].sample(frac=1).reset_index(drop=True)
+    self.train = train
+    self.img_shape = img_shape
+    self.ram = load_in_ram
+    self.mean, self.std = mean, std
+    if self.ram:
+      print("Preprocessing dataset")
+      self.processed_ds = [self.process_image(self.df.iloc[i]["file_path"]) for i in tqdm(range(len(self.df)))]
+      # print(torch.std_mean(torch.stack(self.processed_ds, dim=0), dim=None))
     
   def __len__(self):
     return len(self.df)
   
+  def process_image(self, file_path):
+    im = Image.open(file_path)
+    im : Image.Image
+
+    im = im.resize(self.img_shape).convert("L")
+
+    return (ToTensor()(im) - self.mean) / self.std
+
   def __getitem__(self, index):
     row = self.df.iloc[index]
     path, class_index = row["file_path"], row["class_index"]
-
-    im = Image.open(path)
-    im : Image.Image
-
-    im = im.resize((224, 224)).convert("RGB")
-
-    return ToTensor()(im), class_index
+    if self.ram:
+      return self.processed_ds[index], class_index
+    # else
+    return self.process_image(path), class_index
   
 class ContrastivePairLoader(TorchDataset, DatasetTemplate):
   def __init__(self, dataset: DocDataset):
     super(ContrastivePairLoader, self).__init__()
     self.dataset = dataset
+    self.train = self.dataset.train
     self.randomize_pairs()
 
   def randomize_pairs(self):
@@ -70,8 +89,12 @@ class ContrastivePairLoader(TorchDataset, DatasetTemplate):
       # se y == 0, escolhe um aleatorio de outra classe
       data_filter = op(ds_df["class_index"], class_index)
       data_filter = data_filter & (ds_df["file_path"] != file_path)
+      filtered_data = ds_df[data_filter]
+      if len(filtered_data) < 1:
+        data_filter = (ds_df["class_index"] != class_index) & (ds_df["file_path"] != file_path)
+        filtered_data = ds_df[data_filter]
 
-      index = ds_df[data_filter].sample(n=1).index[0]
+      index = filtered_data.sample(n=1).index[0]
 
       dic["x2"].append(index)
       dic["y"].append(y)
@@ -91,4 +114,5 @@ class ContrastivePairLoader(TorchDataset, DatasetTemplate):
     return (x1, x2), y
   
   def on_epoch_end(self):
-    return self.randomize_pairs()
+    if self.train:
+      self.randomize_pairs()

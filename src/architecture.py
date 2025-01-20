@@ -13,12 +13,16 @@ class Vit(torch.nn.Module):  # modelo poderoso e grande, aprende com muitos dado
     out = self.linear(out_imagenet)
 
     return out 
+  
+  @property
+  def name(self):
+    return "VIT_B_16"
 
 class CCT(torch.nn.Module):  # modelo economico, aprende com menos dados
-  def __init__(self, out_dim: int = 64):
+  def __init__(self, out_dim: int = 64, img_shape = (224, 224)):
     super(CCT, self).__init__()
     self.model = cct_2(  # parametros padroes
-      img_size=224,
+      img_size=img_shape,
       n_conv_layers = 3,
       kernel_size = 7,
       stride = 2,
@@ -28,10 +32,15 @@ class CCT(torch.nn.Module):  # modelo economico, aprende com menos dados
       pooling_padding = 1,
       num_classes = out_dim,
       positional_embedding = 'learnable', # ['sine', 'learnable', 'none']
+      n_input_channels=1,
     )
 
   def forward(self, x):
     return self.model(x)
+  
+  @property
+  def name(self):
+    return "CCT_2"
 
 class SiameseModel(torch.nn.Module):
   def __init__(self, model: torch.nn.Module):
@@ -40,3 +49,7 @@ class SiameseModel(torch.nn.Module):
 
   def forward(self, x1, x2):
     return self.model(x1), self.model(x2)
+  
+  @property
+  def name(self):
+    return self.model.name
