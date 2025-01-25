@@ -9,6 +9,8 @@ import numpy as np
 from tqdm.auto import tqdm
 from loss import ContrastiveLoss
 from log import Log
+import typing
+from callbacks import Callback
 
 TRAIN, VAL = True, False
 
@@ -101,7 +103,9 @@ def train(
     model,
     device,
     log: Log,
-    patience: int = None
+    patience: int = None,
+    callbacks: typing.List[Callback] = [],
+    model_save_path: str = None,
   ):
   ea = EarlyStopping(patience)
 
@@ -140,13 +144,28 @@ def train(
       train_dataloader.on_epoch_end()
       val_dataloader.on_epoch_end()
 
+      for callback in callbacks:
+        callback.on_epoch_end(
+          val_loss=val_loss,
+          epoch=i,
+          model=model,
+        )
+
       if ea.should_we_stop(val_loss, i):
         break
+
+    for callback in callbacks:
+      callback.on_train_end(
+        val_loss=val_loss,
+        epoch=i,
+        model=model,
+      )
 
   except KeyboardInterrupt:
     print("Salvando modelo antes de encerrar...")
     raise
 
   finally:
-    torch.save(model, "./model.pt")
-    print("Modelo salvo.")
+    if model_save_path is not None:
+      torch.save(model, model_save_path)
+      print("Modelo salvo.")

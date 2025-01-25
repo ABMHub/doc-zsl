@@ -6,11 +6,12 @@ from log import Log
 from metrics import EER, LR
 from loss import ContrastiveLoss
 import torch
+from callbacks import ModelCheckpoint
 
 dataset = "rvl_zsl_5k"
 split = "zsl"  # overlap, zsl, gzsl
 
-wandb_flag = True
+wandb_flag = False
 
 img_shape = (256, 256)
 out_dim = 64
@@ -19,10 +20,12 @@ shuffle_loader = True
 learning_rate = 1e-5
 patience = 9
 n_channels = 3
-model_version = 1
+model_version = 2
 
-# model = CCT(out_dim=out_dim, img_shape=img_shape, model_version=model_version, n_input_channels=n_channels)
-model = EfficientNet(64, model_version=model_version)
+project_name = f"EfficientNet_b{model_version} R2 5k ZSL"
+
+model = CCT(out_dim=out_dim, img_shape=img_shape, model_version=model_version, n_input_channels=n_channels)
+# model = EfficientNet(64, model_version=model_version)
 model = SiameseModel(model)
 
 config = Config(
@@ -34,7 +37,7 @@ config = Config(
   scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau,
   learning_rate=learning_rate,
   img_shape = img_shape,
-  optimizer=torch.optim.Adam,
+  optimizer=torch.optim.SGD,
   patience=patience,
   n_channels=n_channels,
   model_version=model_version,
@@ -57,7 +60,7 @@ wandb_args = {
   "project": "mestrado-comparadora",
   # "name": "EfficientNet R4 5k",
   # "name": f"CCT_{model_version} R1 5k ZSL",
-  "name": f"EfficientNet_b{model_version} R2 5k ZSL",
+  "name": project_name,
   "notes": "Teste sobre versões da rede.",
   "config": config.config_dict()
 }
@@ -67,6 +70,8 @@ log.create_metric("eer", EER, True)
 log.create_metric("eer", EER, False)
 log.create_metric("lr", LR, True, scheduler=config.scheduler)
 
+mc = ModelCheckpoint(f"./{project_name}_best.pt")
+
 train(
   config = config,
   train_dataloader = train_loader,
@@ -75,4 +80,6 @@ train(
   device = "cuda",
   log = log,
   patience = patience,
+  callbacks=[mc],
+  model_save_path=f"{project_name}_last.pt"
 )
