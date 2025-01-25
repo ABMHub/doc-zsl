@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from vit_pytorch.cct import cct_2
+from vit_pytorch import cct
 
 class Vit(torch.nn.Module):  # modelo poderoso e grande, aprende com muitos dados
   def __init__(self, out_dim: int = 64):
@@ -19,10 +19,24 @@ class Vit(torch.nn.Module):  # modelo poderoso e grande, aprende com muitos dado
     return "VIT_B_16"
 
 class CCT(torch.nn.Module):  # modelo economico, aprende com menos dados
-  def __init__(self, out_dim: int = 64, img_shape = (224, 224)):
+  def __init__(self, out_dim: int = 64, img_shape = (224, 224), model_version = 2, n_input_channels = 3):
     super(CCT, self).__init__()
-    self.model = cct_2(  # parametros padroes
+    ccts = {
+      2: cct.cct_2,
+      4: cct.cct_4,
+      6: cct.cct_6,
+      7: cct.cct_7,
+      8: cct.cct_8,
+      14: cct.cct_14,
+      16: cct.cct_16,
+    }
+
+    cct_obj = ccts[model_version]
+
+    self.model = cct_obj(  # parametros padroes
       img_size=img_shape,
+      num_classes = out_dim,
+      n_input_channels=n_input_channels,
       n_conv_layers = 3,
       kernel_size = 7,
       stride = 2,
@@ -30,9 +44,7 @@ class CCT(torch.nn.Module):  # modelo economico, aprende com menos dados
       pooling_kernel_size = 3,
       pooling_stride = 2,
       pooling_padding = 1,
-      num_classes = out_dim,
-      positional_embedding = 'learnable', # ['sine', 'learnable', 'none']
-      n_input_channels=1,
+      positional_embedding = 'learnable'
     )
 
   def forward(self, x):
@@ -43,12 +55,26 @@ class CCT(torch.nn.Module):  # modelo economico, aprende com menos dados
     return "CCT_2"
 
 class EfficientNet(torch.nn.Module):
-  def __init__(self, out_dim: int = 64):
+  def __init__(self, out_dim: int = 64, model_version = 0):
     super(EfficientNet, self).__init__()
-    self.model = torchvision.models.efficientnet_b0(weights=torchvision.models.EfficientNet_B0_Weights.DEFAULT)
+    ens = {
+      0: (torchvision.models.efficientnet_b0, torchvision.models.EfficientNet_B0_Weights.DEFAULT),
+      1: (torchvision.models.efficientnet_b1, torchvision.models.EfficientNet_B1_Weights.DEFAULT),
+      2: (torchvision.models.efficientnet_b2, torchvision.models.EfficientNet_B2_Weights.DEFAULT),
+      3: (torchvision.models.efficientnet_b3, torchvision.models.EfficientNet_B3_Weights.DEFAULT),
+      4: (torchvision.models.efficientnet_b4, torchvision.models.EfficientNet_B0_Weights.DEFAULT),
+      5: (torchvision.models.efficientnet_b5, torchvision.models.EfficientNet_B5_Weights.DEFAULT),
+      6: (torchvision.models.efficientnet_b6, torchvision.models.EfficientNet_B6_Weights.DEFAULT),
+      7: (torchvision.models.efficientnet_b7, torchvision.models.EfficientNet_B7_Weights.DEFAULT),
+    }
+
+    model, w = ens[model_version]
+
+    self.model = model(weights=w)
     c = torch.nn.Sequential(
       torch.nn.Dropout(0.2, True),
       torch.nn.Linear(1280, out_dim)
+      # torch.nn.Linear(1408, out_dim)
     )
     self.model.classifier = c
 

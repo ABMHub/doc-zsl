@@ -66,6 +66,8 @@ def train_epoch(epoch, data_loader, model, criterion, optimizer, device, log : L
 # Function for the validation data loader
 def val_epoch(epoch, data_loader, model, criterion, device, log: Log):
   model.eval()
+  y_pred_batch = []
+  y_true = []
 
   with torch.no_grad():
     loop = tqdm(data_loader, total=len(data_loader), leave=False)
@@ -80,10 +82,14 @@ def val_epoch(epoch, data_loader, model, criterion, device, log: Log):
       outputs = model(*x)
       out_cpu = [elem.detach().cpu().numpy() for elem in outputs]
 
+      y_pred_batch.append(out_cpu)
+      y_true += y.detach().cpu().numpy().tolist()
+
       loss = criterion(*outputs, y)
       log.update_metric("loss", VAL, value=loss.detach().cpu())
-      log.update_all_metrics(train=VAL, y_true=y.detach().cpu().numpy(), y_pred=out_cpu)  
-      loop.set_postfix(log.create_metrics_dict(VAL))
+      
+  log.update_all_metrics(train=VAL, y_true=y_true, y_pred=y_pred_batch)
+  # loop.set_postfix(log.create_metrics_dict(VAL))
 
   print(f"Val epoch {epoch}")
   pretty_print_dict(log.create_metrics_dict(VAL))

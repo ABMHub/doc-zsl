@@ -14,23 +14,16 @@ metric = {
 }
 
 parameters_dict = {
-    "img_side_size": {'values': [50, 100, 150, 200, 250]},
-    # "img_side_size": {'value': 224},
-    'optimizer': {'values': ['adamw', 'sgd', 'adam']},
-    'learning_rate': {
-        # a flat distribution between 0 and 0.1
-        'distribution': 'log_uniform',
-        'min': -10,
-        'max': -1
-    },
-    "out_dim": {
-        'distribution': 'q_uniform',
-        "q": 8,
-        'min': 8,
-        'max': 64
-    },
-    "batch_size": {"values": [8, 16, 32, 64]},
-    'epochs': {"value": 80}
+    # "img_side_size": {'values': [50, 100, 150, 200, 250]},
+    "img_side_size": {'value': 224},
+    'optimizer': {'value': 'sgd'},
+    'learning_rate': {'values': [1e-2, 1e-3, 1e-4, 1e-5]},
+    "out_dim": {'values': [16, 32, 64, 128]},
+    "batch_size": {"value": 16},
+    'epochs': {"value": 1000},
+    'n_channels': {"value": 3},
+    'patience': {"value": 10},
+    "model_version": {"value": 1}
 }
 
 sweep_config = {
@@ -47,6 +40,9 @@ def main(config=None):
     img_shape = (int(wdb_config.img_side_size), int(wdb_config.img_side_size))
     out_dim = int(wdb_config.out_dim)
     batch_size = int(wdb_config.batch_size)
+    n_channels = int(wdb_config.n_channels)
+    patience = int(wdb_config.patience)
+    model_version = int(wdb_config.model_version)
 
     optimizers = {
       "adamw": torch.optim.AdamW,
@@ -56,8 +52,8 @@ def main(config=None):
 
     shuffle_loader = True
 
-    # model = EfficientNet(out_dim=out_dim)
-    model = CCT(out_dim=out_dim, img_shape=img_shape)
+    model = EfficientNet(out_dim=out_dim, model_version=model_version)
+    # model = CCT(out_dim=out_dim, img_shape=img_shape)
     model = SiameseModel(model)
 
     config = Config(
@@ -75,14 +71,15 @@ def main(config=None):
 
     csv_path = "./splits.csv"
 
-    train_loader = DocDataset(csv_path, train=True, load_in_ram=True, img_shape=img_shape)
-    val_loader = DocDataset(csv_path, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std)
+    train_loader = DocDataset(csv_path, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels)
+    val_loader = DocDataset(csv_path, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
 
     train_loader = ContrastivePairLoader(train_loader)
     val_loader = ContrastivePairLoader(val_loader)
 
     train_loader = DataLoader(train_loader, batch_size, shuffle=shuffle_loader)
     val_loader = DataLoader(val_loader, batch_size, shuffle=False)
+
 
     # wandb_args = {
     #   "project": "mestrado-comparadora",
@@ -92,9 +89,9 @@ def main(config=None):
     # }
 
     log = Log(wandb_flag=True)
-    log.create_metric("eer", EER(), True)
-    log.create_metric("eer", EER(), False)
-    log.create_metric("lr", LR(config.scheduler), True)
+    log.create_metric("eer", EER, True)
+    log.create_metric("eer", EER, False)
+    log.create_metric("lr", LR, True, scheduler=config.scheduler)
 
     train(
       config = config,
@@ -102,8 +99,9 @@ def main(config=None):
       val_dataloader = val_loader,
       model = model,
       device = "cuda",
-      log = log
+      log = log,
+      patience = patience,
     )
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("3qzddqf3", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("uqrs008s", function=main, count=None, project="mestrado-comparadora")

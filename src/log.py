@@ -1,25 +1,27 @@
 import wandb
 import numpy as np
 from metrics import Metric, Loss
+from typing import Type
 
 class Log:
   def __init__(self, minimize_loss = True, wandb_flag: bool = True, wandb_args: dict = None):
     self.train_metrics: dict[str, Metric] = dict()
     self.val_metrics: dict[str, Metric] = dict()
-    self.create_metric("loss", Loss(), True)
-    self.create_metric("loss", Loss(), False)
+    self.create_metric("loss", Loss, True)
+    self.create_metric("loss", Loss, False)
 
     self.wandb_flag = wandb_flag
 
     if self.wandb_flag and wandb.run is None:
       wandb.init(**wandb_args)
 
-  def create_metric(self, name, metric_object: Metric, train = True):
+  def create_metric(self, name, metric: Type[Metric], train = True, **kwargs):
+    obj = metric(train=train, **kwargs)
     if train:
-      self.train_metrics[name] = metric_object
+      self.train_metrics[name] = obj
 
     else:
-      self.val_metrics[name] = metric_object
+      self.val_metrics[name] = obj
 
   def update_metric(self, metric_name, train, **kwargs):
     dic = self.train_metrics if train else self.val_metrics

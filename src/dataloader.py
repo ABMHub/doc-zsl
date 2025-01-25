@@ -30,7 +30,8 @@ class DocDataset(TorchDataset, DatasetTemplate):
     img_shape: tuple = (224, 224),
     load_in_ram : bool = False,
     mean: float = 0.9402,
-    std: float = 0.1724
+    std: float = 0.1724,
+    n_channels: int = 3
   ):
     super().__init__()
     df = pd.read_csv(csv_path, index_col=False)
@@ -39,6 +40,7 @@ class DocDataset(TorchDataset, DatasetTemplate):
     self.img_shape = img_shape
     self.ram = load_in_ram
     self.mean, self.std = mean, std
+    self.n_channels = n_channels
     if self.ram:
       print("Preprocessing dataset")
       self.processed_ds = [self.process_image(self.df.iloc[i]["file_path"]) for i in tqdm(range(len(self.df)))]
@@ -51,7 +53,8 @@ class DocDataset(TorchDataset, DatasetTemplate):
     im = Image.open(file_path)
     im : Image.Image
 
-    im = im.resize(self.img_shape).convert("L")
+    im = im.resize(self.img_shape)
+    im = im.convert("L") if self.n_channels == 1 else im.convert("RGB")
 
     return (ToTensor()(im) - self.mean) / self.std
 

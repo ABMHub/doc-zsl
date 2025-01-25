@@ -15,8 +15,8 @@ class Config:
     self.learning_rate = learning_rate
     self.criterion = criterion
     self.model = model
-    self.optimizer = optimizer(model.parameters(), lr=self.learning_rate)
-    self.scheduler = scheduler(self.optimizer, verbose=True, patience=3)
+    self.optimizer = optimizer(model.parameters(), lr=self.learning_rate, momentum=0.9)
+    self.scheduler = scheduler(self.optimizer, verbose=True, patience=7)
     self.kwargs = kwargs
 
   def config_dict(self):
