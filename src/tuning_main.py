@@ -1,6 +1,6 @@
 from trainer import train
 from config import Config
-from architecture import Vit, SiameseModel, CCT, EfficientNet
+from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
 from metrics import EER, LR, Identification
@@ -8,16 +8,17 @@ from loss import ContrastiveLoss
 import torch
 import wandb
 import math
+from callbacks import ModelCheckpoint
 
 metric = {
   'name': 'val-loss',
   'goal': 'minimize'
 }
 
-model_version = 0
+model_version = 18
 
 parameters_dict = {
-  "img_side_size": {'value': 256},
+  "img_side_size": {'value': 224},
   "pre_trained": {"values": [True, False]},
   'optimizer': {'value': 'sgd'},
   'learning_rate': {
@@ -43,7 +44,7 @@ parameters_dict = {
 sweep_config = {
   'method': 'bayes',
   'metric': metric,
-  "name": f"EfficientNet_b{model_version}_torchvision",
+  "name": f"ResNet{model_version}_torchvision",
   "parameters": parameters_dict
 }
 
@@ -69,8 +70,9 @@ def main(config=None):
 
     shuffle_loader = True
 
-    model = EfficientNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
+    # model = EfficientNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
     # model = CCT(out_dim=out_dim, img_shape=img_shape)
+    model = ResNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
     model = SiameseModel(model)
 
     config = Config(
@@ -114,6 +116,10 @@ def main(config=None):
     log.create_metric("lr", LR, True, scheduler=config.scheduler)
     log.create_metric("ident", Identification, False)
 
+    project_name = wandb.run.name
+
+    mc = ModelCheckpoint(f"./{project_name}_best.pt")
+
     train(
       config = config,
       train_dataloader = train_loader,
@@ -122,11 +128,12 @@ def main(config=None):
       device = "cuda",
       log = log,
       patience = patience,
+      callbacks=[mc],
+      model_save_path=f"{project_name}_last.pt"
     )
 
 # sweep_id = wandb.sweep(sweep_config, project="mestrado-comparadora")
-# print(sweep_id)
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("dri6ugja", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("lzol5tg4", function=main, count=None, project="mestrado-comparadora")

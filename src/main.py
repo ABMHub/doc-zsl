@@ -28,7 +28,7 @@ project_name = f"EfficientNet_b{model_version} R2 5k ZSL"
 # model = CCT(out_dim=out_dim, img_shape=img_shape, model_version=model_version, n_input_channels=n_channels)
 # model = EfficientNet(64, model_version=model_version)
 # model = Vit(out_dim=64, model_version="b", pretrained=False)
-model = ResNet(out_dim=64, model_version=18, pretrained=False)
+model = Vit(out_dim=64, model_version="b", pretrained=False)
 model = SiameseModel(model)
 
 config = Config(

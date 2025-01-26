@@ -6,6 +6,7 @@ from accelerate import Accelerator
 import numpy as np
 import torch
 import numpy as np
+import torch.nn.grad
 from tqdm.auto import tqdm
 from loss import ContrastiveLoss
 from log import Log
@@ -56,13 +57,19 @@ def train_epoch(epoch, data_loader, model, criterion, optimizer, device, log : L
 
     out_cpu = [elem.detach().cpu().numpy() for elem in outputs]
 
+    optimizer.zero_grad()
+    loss.backward()
+
+    try:
+      torch.nn.utils.clip_grad_norm_(model.parameters(), 5, error_if_nonfinite=True)
+    except RuntimeError:
+      continue
+
+    optimizer.step()
+
     log.update_metric("loss", train=TRAIN, value=loss.detach().cpu())
     log.update_all_metrics(train=TRAIN, y_true=y.detach().cpu().numpy(), y_pred=out_cpu)
     loop.set_postfix(log.create_metrics_dict(TRAIN))
-
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
 
   print(f"Train epoch {epoch}")
   pretty_print_dict(log.create_metrics_dict(TRAIN))
