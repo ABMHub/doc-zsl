@@ -9,14 +9,17 @@ class Config:
     epochs: int = 1,
     scheduler: torch.optim.lr_scheduler.LRScheduler = None,
     learning_rate: float = 1e-3,
+    scheduler_patience: int = 7,
+    momentum: float = 0,
+    decay: float = 0,
     **kwargs
   ):
     self.epochs = epochs
     self.learning_rate = learning_rate
     self.criterion = criterion
     self.model = model
-    self.optimizer = optimizer(model.parameters(), lr=self.learning_rate, momentum=0.9)
-    self.scheduler = scheduler(self.optimizer, verbose=True, patience=7)
+    self.optimizer = optimizer(model.parameters(), lr=self.learning_rate, momentum=momentum, weight_decay=decay)
+    self.scheduler = scheduler(self.optimizer, verbose=True, patience=scheduler_patience)
     self.kwargs = kwargs
 
   def config_dict(self):

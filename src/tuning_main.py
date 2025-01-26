@@ -7,32 +7,48 @@ from metrics import EER, LR, Identification
 from loss import ContrastiveLoss
 import torch
 import wandb
+import math
 
 metric = {
-    'name': 'val-loss',
-    'goal': 'minimize'
+  'name': 'val-loss',
+  'goal': 'minimize'
 }
 
+model_version = 0
+
 parameters_dict = {
-    # "img_side_size": {'values': [50, 100, 150, 200, 250]},
-    "img_side_size": {'value': 224},
-    'optimizer': {'value': 'sgd'},
-    'learning_rate': {'values': [1e-2, 1e-3, 1e-4, 1e-5]},
-    "out_dim": {'values': [16, 32, 64, 128]},
-    "batch_size": {"value": 16},
-    'epochs': {"value": 1000},
-    'n_channels': {"value": 3},
-    'patience': {"value": 10},
-    "model_version": {"value": 1}
+  "img_side_size": {'value': 256},
+  'optimizer': {'value': 'sgd'},
+  'learning_rate': {
+    'values': [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+  },
+  "out_dim": {
+    'values': list(range(8, 129, 8))
+  },
+  "momentum": {
+    'values': [0] + [math.exp(1/(elem*6 + 5)) for elem in range(-1, -16, -1)],
+  },
+  "w_decay": {
+    "values": [math.exp(elem*1.2) for elem in range(-1, -16, -1)] + [0]
+  },
+  "scheduler_patience": {"value": 5},
+  "batch_size": {"value": 16},
+  'epochs': {"value": 1000},
+  'n_channels': {"value": 3},
+  'patience': {"value": 13},
+  "model_version": {"value": model_version}
 }
 
 sweep_config = {
-    'method': 'bayes',
-    'metric': metric,
-    "parameters": parameters_dict
+  'method': 'bayes',
+  'metric': metric,
+  "name": f"EfficientNet_b{model_version}_torchvision",
+  "parameters": parameters_dict
 }
 
 # sweep_id = wandb.sweep(sweep_config, project="mestrado-comparadora")
+# print(sweep_id)
+# exit()
 
 def main(config=None):
   with wandb.init(config=config):
@@ -43,6 +59,9 @@ def main(config=None):
     n_channels = int(wdb_config.n_channels)
     patience = int(wdb_config.patience)
     model_version = int(wdb_config.model_version)
+    scheduler_patience = int(wdb_config.scheduler_patience)
+    momentum = float(wdb_config.momentum)
+    decay = float(wdb_config.w_decay)
 
     optimizers = {
       "adamw": torch.optim.AdamW,
@@ -66,7 +85,10 @@ def main(config=None):
       learning_rate=wdb_config.learning_rate,
       img_width = img_shape[0],
       img_height = img_shape[1],
-      optimizer=optimizers[wdb_config.optimizer]
+      optimizer=optimizers[wdb_config.optimizer],
+      scheduler_patience=scheduler_patience,
+      momentum=momentum,
+      decay=decay
     )
 
     csv_path = "./splits.csv"
@@ -105,4 +127,4 @@ def main(config=None):
     )
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("uqrs008s", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("pqjwcq91", function=main, count=None, project="mestrado-comparadora")
