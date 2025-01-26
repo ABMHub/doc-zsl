@@ -1,6 +1,6 @@
 from trainer import train
 from config import Config
-from architecture import Vit, SiameseModel, CCT, EfficientNet
+from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
 from metrics import EER, LR, Identification
@@ -12,6 +12,7 @@ dataset = "rvl_zsl_5k"
 split = "zsl"  # overlap, zsl, gzsl
 
 wandb_flag = False
+load_in_ram = False
 
 img_shape = (224, 224)
 out_dim = 64
@@ -19,13 +20,15 @@ batch_size = 16
 shuffle_loader = True
 learning_rate = 1e-2
 patience = 9
-n_channels = 1
-model_version = 2
+n_channels = 3
+model_version = 6
 
 project_name = f"EfficientNet_b{model_version} R2 5k ZSL"
 
-model = CCT(out_dim=out_dim, img_shape=img_shape, model_version=model_version, n_input_channels=n_channels)
+# model = CCT(out_dim=out_dim, img_shape=img_shape, model_version=model_version, n_input_channels=n_channels)
 # model = EfficientNet(64, model_version=model_version)
+# model = Vit(out_dim=64, model_version="b", pretrained=False)
+model = ResNet(out_dim=64, model_version=18, pretrained=False)
 model = SiameseModel(model)
 
 config = Config(
@@ -47,8 +50,8 @@ config = Config(
 
 csv_path = "./splits.csv"
 
-train_loader = DocDataset(csv_path, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels)
-val_loader = DocDataset(csv_path, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
+train_loader = DocDataset(csv_path, train=True, load_in_ram=load_in_ram, img_shape=img_shape, n_channels=n_channels)
+val_loader = DocDataset(csv_path, train=False, load_in_ram=load_in_ram, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
 
 train_loader = ContrastivePairLoader(train_loader)
 val_loader = ContrastivePairLoader(val_loader)

@@ -18,6 +18,7 @@ model_version = 0
 
 parameters_dict = {
   "img_side_size": {'value': 256},
+  "pre_trained": {"values": [True, False]},
   'optimizer': {'value': 'sgd'},
   'learning_rate': {
     'values': [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
@@ -46,10 +47,6 @@ sweep_config = {
   "parameters": parameters_dict
 }
 
-# sweep_id = wandb.sweep(sweep_config, project="mestrado-comparadora")
-# print(sweep_id)
-# exit()
-
 def main(config=None):
   with wandb.init(config=config):
     wdb_config = wandb.config
@@ -62,6 +59,7 @@ def main(config=None):
     scheduler_patience = int(wdb_config.scheduler_patience)
     momentum = float(wdb_config.momentum)
     decay = float(wdb_config.w_decay)
+    pre_trained = bool(wdb_config.pre_trained)
 
     optimizers = {
       "adamw": torch.optim.AdamW,
@@ -71,7 +69,7 @@ def main(config=None):
 
     shuffle_loader = True
 
-    model = EfficientNet(out_dim=out_dim, model_version=model_version)
+    model = EfficientNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
     # model = CCT(out_dim=out_dim, img_shape=img_shape)
     model = SiameseModel(model)
 
@@ -126,5 +124,9 @@ def main(config=None):
       patience = patience,
     )
 
+# sweep_id = wandb.sweep(sweep_config, project="mestrado-comparadora")
+# print(sweep_id)
+# exit()
+
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("pqjwcq91", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("dri6ugja", function=main, count=None, project="mestrado-comparadora")
