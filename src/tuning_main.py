@@ -3,7 +3,7 @@ from config import Config
 from architecture import Vit, SiameseModel, CCT, EfficientNet
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
-from metrics import EER, LR
+from metrics import EER, LR, Identification
 from loss import ContrastiveLoss
 import torch
 import wandb
@@ -92,6 +92,7 @@ def main(config=None):
     log.create_metric("eer", EER, True)
     log.create_metric("eer", EER, False)
     log.create_metric("lr", LR, True, scheduler=config.scheduler)
+    log.create_metric("ident", Identification, False)
 
     train(
       config = config,

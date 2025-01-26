@@ -11,6 +11,8 @@ from loss import ContrastiveLoss
 from log import Log
 import typing
 from callbacks import Callback
+from collections.abc import Callable
+from dataloader import DataLoader
 
 TRAIN, VAL = True, False
 
@@ -66,7 +68,14 @@ def train_epoch(epoch, data_loader, model, criterion, optimizer, device, log : L
   pretty_print_dict(log.create_metrics_dict(TRAIN))
 
 # Function for the validation data loader
-def val_epoch(epoch, data_loader, model, criterion, device, log: Log):
+def val_epoch(
+    epoch: int,
+    data_loader: DataLoader,
+    model: torch.nn.Module,
+    criterion: Callable,
+    device: str,
+    log: Log
+  ):
   model.eval()
   y_pred_batch = []
   y_true = []
@@ -90,7 +99,7 @@ def val_epoch(epoch, data_loader, model, criterion, device, log: Log):
       loss = criterion(*outputs, y)
       log.update_metric("loss", VAL, value=loss.detach().cpu())
       
-  log.update_all_metrics(train=VAL, y_true=y_true, y_pred=y_pred_batch)
+  log.update_all_metrics(train=VAL, y_true=y_true, y_pred=y_pred_batch, df=data_loader.dataset.dataset.df)
   # loop.set_postfix(log.create_metrics_dict(VAL))
 
   print(f"Val epoch {epoch}")

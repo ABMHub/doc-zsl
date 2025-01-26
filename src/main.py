@@ -3,7 +3,7 @@ from config import Config
 from architecture import Vit, SiameseModel, CCT, EfficientNet
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
-from metrics import EER, LR
+from metrics import EER, LR, Identification
 from loss import ContrastiveLoss
 import torch
 from callbacks import ModelCheckpoint
@@ -13,13 +13,13 @@ split = "zsl"  # overlap, zsl, gzsl
 
 wandb_flag = False
 
-img_shape = (256, 256)
+img_shape = (224, 224)
 out_dim = 64
 batch_size = 16
 shuffle_loader = True
-learning_rate = 1e-5
+learning_rate = 1e-2
 patience = 9
-n_channels = 3
+n_channels = 1
 model_version = 2
 
 project_name = f"EfficientNet_b{model_version} R2 5k ZSL"
@@ -69,6 +69,7 @@ log = Log(wandb_flag=wandb_flag, wandb_args=wandb_args)
 log.create_metric("eer", EER, True)
 log.create_metric("eer", EER, False)
 log.create_metric("lr", LR, True, scheduler=config.scheduler)
+log.create_metric("ident", Identification, False)
 
 mc = ModelCheckpoint(f"./{project_name}_best.pt")
 

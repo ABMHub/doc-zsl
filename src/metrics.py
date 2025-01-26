@@ -1,5 +1,6 @@
 from sklearn.metrics import roc_curve
 import numpy as np
+import pandas as pd
 
 class Metric:
   def __init__(self, name, minimize = True, train = True):
@@ -23,6 +24,14 @@ class Metric:
     return np.mean(self.current_epoch)
   
   def batches_to_list(self, pred_batches):
+    """_summary_
+
+    Args:
+        pred_batches (_type_): _description_
+
+    Returns:
+        _type_: [modal, data]
+    """
     n_outs = len(pred_batches[0])
     ret = [[] for _ in range(n_outs)]
 
@@ -31,6 +40,10 @@ class Metric:
         ret[i] += elem[i].tolist()
 
     return np.array(ret)
+
+  @staticmethod
+  def euclidian_distance(x1, x2):
+    return np.linalg.norm(x1-x2)
 
 class Loss(Metric):
   def __init__(self, **kwargs):
@@ -64,10 +77,6 @@ class EER(Metric):
 
     return batch_eer
 
-  @staticmethod
-  def euclidian_distance(x1, x2):
-    return np.linalg.norm(x1-x2)
-
   def calculate_eer(self) -> tuple[float, float]:
     fpr, tpr, threshold = roc_curve(self.y, self.dists_pred, pos_label=0)
     fnr = 1 - tpr
@@ -86,3 +95,44 @@ class LR(Metric):
 
   def get_current_info(self):
     return self.scheduler.get_last_lr()[0]
+
+class Identification(Metric):
+  def __init__(self, **kwargs):
+    super().__init__("identification", **kwargs)
+
+  def add_data(self, y_pred, df: pd.DataFrame, **kwargs):
+    if self.train:
+      raise ValueError("Não implementado para o cenário de treino")
+    
+    y_pred = self.batches_to_list(y_pred)[0]
+    classes = df["class_index"]
+    unique_classes = classes.unique()
+    correct = 0
+    total = 0
+
+    for i in range(len(y_pred)):
+      dists = []
+      elem_class = classes[i]
+      elem_features = y_pred[i]
+      elem_same_class = classes[(classes == elem_class) & (classes.index != i)]
+      if len(elem_same_class) == 0: continue
+
+      same_class_sample_idx = elem_same_class.sample(n=1).index[0]
+      same_class_dist = self.euclidian_distance(y_pred[same_class_sample_idx], elem_features)
+
+      for j in range(len(unique_classes)):
+        current_class = unique_classes[j]
+        if current_class != elem_class:
+          current_series = classes[classes == current_class]
+          idx = current_series.sample(n=1).index[0]
+          compare_features = y_pred[idx]
+
+          dists.append(self.euclidian_distance(elem_features, compare_features))
+
+      total += 1
+      if np.min(dists) > same_class_dist:
+        correct += 1
+
+    acc = correct/total
+    self.current_epoch = [acc]
+    return acc
