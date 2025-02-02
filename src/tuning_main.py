@@ -15,14 +15,14 @@ metric = {
   'goal': 'minimize'
 }
 
-model_version = 18
+model_version = 34
 
 parameters_dict = {
-  "img_side_size": {'value': 224},
+  "img_side_size": {'value': 256},
   "pre_trained": {"values": [True, False]},
   'optimizer': {'value': 'sgd'},
   'learning_rate': {
-    'values': [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+    'values': [1e-1, 1e-2, 1e-3, 1e-4]
   },
   "out_dim": {
     'values': list(range(8, 129, 8))
@@ -45,6 +45,7 @@ sweep_config = {
   'method': 'bayes',
   'metric': metric,
   "name": f"ResNet{model_version}_torchvision",
+  # "name": f"EfficientNet_b{model_version}_torchvision",
   "parameters": parameters_dict
 }
 
@@ -56,7 +57,7 @@ def main(config=None):
     batch_size = int(wdb_config.batch_size)
     n_channels = int(wdb_config.n_channels)
     patience = int(wdb_config.patience)
-    model_version = int(wdb_config.model_version)
+    model_version = wdb_config.model_version
     scheduler_patience = int(wdb_config.scheduler_patience)
     momentum = float(wdb_config.momentum)
     decay = float(wdb_config.w_decay)
@@ -136,4 +137,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("lzol5tg4", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("vm98ur22", function=main, count=None, project="mestrado-comparadora")

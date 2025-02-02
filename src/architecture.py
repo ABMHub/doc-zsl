@@ -6,8 +6,8 @@ class Vit(torch.nn.Module):  # modelo poderoso e grande, aprende com muitos dado
   def __init__(self, out_dim: int = 64, model_version = "b", pretrained: bool = True):
     super(Vit, self).__init__()
     ens = {
-      "b": (torchvision.models.vit_b_32, torchvision.models.ViT_B_16_Weights.DEFAULT),
-      "l": (torchvision.models.vit_l_32, torchvision.models.ViT_L_16_Weights.DEFAULT),
+      "b": (torchvision.models.vit_b_32, torchvision.models.ViT_B_32_Weights.DEFAULT),
+      "l": (torchvision.models.vit_l_32, torchvision.models.ViT_L_32_Weights.DEFAULT),
     }
 
     self.model_version = model_version
