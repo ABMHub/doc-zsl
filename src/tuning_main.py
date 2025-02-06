@@ -9,6 +9,7 @@ import torch
 import wandb
 import math
 from callbacks import ModelCheckpoint
+import pandas as pd
 
 metric = {
   'name': 'val-loss',
@@ -18,33 +19,34 @@ metric = {
 model_version = 34
 
 parameters_dict = {
-  "img_side_size": {'value': 256},
-  "pre_trained": {"values": [True, False]},
+  "img_side_size": {'value': 224},
+  "pre_trained": {"value": False},
   'optimizer': {'value': 'sgd'},
   'learning_rate': {
-    'values': [1e-1, 1e-2, 1e-3, 1e-4]
+    'value': 1e-3
   },
   "out_dim": {
-    'values': list(range(8, 129, 8))
+    'value': 64
   },
   "momentum": {
-    'values': [0] + [math.exp(1/(elem*6 + 5)) for elem in range(-1, -16, -1)],
+    'value': 0.97,
   },
   "w_decay": {
-    "values": [math.exp(elem*1.2) for elem in range(-1, -16, -1)] + [0]
+    "value": 1e-5
   },
-  "scheduler_patience": {"value": 5},
   "batch_size": {"value": 16},
   'epochs': {"value": 1000},
   'n_channels': {"value": 3},
-  'patience': {"value": 13},
-  "model_version": {"value": model_version}
+  'patience': {"value": 20},
+  "model_version": {"values": [18, 34, 50, 101, 152]},
+  "split_mode": {"values": ["zsl", "gzsl"]},
+  "split_number": {"values": list(range(5))}
 }
 
 sweep_config = {
   'method': 'bayes',
   'metric': metric,
-  "name": f"ResNet{model_version}_torchvision",
+  "name": f"ResNet_cross_val",
   # "name": f"EfficientNet_b{model_version}_torchvision",
   "parameters": parameters_dict
 }
@@ -58,10 +60,11 @@ def main(config=None):
     n_channels = int(wdb_config.n_channels)
     patience = int(wdb_config.patience)
     model_version = wdb_config.model_version
-    scheduler_patience = int(wdb_config.scheduler_patience)
     momentum = float(wdb_config.momentum)
     decay = float(wdb_config.w_decay)
     pre_trained = bool(wdb_config.pre_trained)
+    split_number = int(wdb_config.split_number)
+    split_mode = str(wdb_config.split_mode)
 
     optimizers = {
       "adamw": torch.optim.AdamW,
@@ -87,18 +90,28 @@ def main(config=None):
       img_width = img_shape[0],
       img_height = img_shape[1],
       optimizer=optimizers[wdb_config.optimizer],
-      scheduler_patience=scheduler_patience,
       momentum=momentum,
       decay=decay
     )
 
     csv_path = "./splits.csv"
+    df = pd.read_csv(csv_path)
+    split_string = f"{split_mode}_split"
+    df = df.rename(columns={split_string: "train"})
+    #gambiarra
+    df.loc[df["train"] == split_number, "train"] = -1
+    df.loc[df["train"] > 0, "train"] = 0
+    df.loc[df["train"] == -1, "train"] = 1
 
-    train_loader = DocDataset(csv_path, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels)
-    val_loader = DocDataset(csv_path, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
+    protocol_path = "./protocol.csv"
+    protocol = pd.read_csv(protocol_path)
+    protocol = protocol[(protocol["split_mode"] == split_string) & (protocol["split_number"] == split_number)]
 
-    train_loader = ContrastivePairLoader(train_loader)
-    val_loader = ContrastivePairLoader(val_loader)
+    train_loader = DocDataset(df, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels)
+    val_loader = DocDataset(df, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
+
+    train_loader = ContrastivePairLoader(train_loader, None)
+    val_loader = ContrastivePairLoader(val_loader, protocol)
 
     train_loader = DataLoader(train_loader, batch_size, shuffle=shuffle_loader)
     val_loader = DataLoader(val_loader, batch_size, shuffle=False)
@@ -114,7 +127,7 @@ def main(config=None):
     log = Log(wandb_flag=True)
     log.create_metric("eer", EER, True)
     log.create_metric("eer", EER, False)
-    log.create_metric("lr", LR, True, scheduler=config.scheduler)
+    # log.create_metric("lr", LR, True, scheduler=config.scheduler)
     log.create_metric("ident", Identification, False)
 
     project_name = wandb.run.name
@@ -137,4 +150,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("vm98ur22", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("jswbig1s", function=main, count=None, project="mestrado-comparadora")

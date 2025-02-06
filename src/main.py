@@ -7,28 +7,30 @@ from metrics import EER, LR, Identification
 from loss import ContrastiveLoss
 import torch
 from callbacks import ModelCheckpoint
+import pandas as pd
 
 dataset = "rvl_zsl_5k"
 split = "zsl"  # overlap, zsl, gzsl
+split_number = 0
 
 wandb_flag = False
-load_in_ram = False
+load_in_ram = True
 
 img_shape = (224, 224)
-out_dim = 64
+out_dim = 16
 batch_size = 16
 shuffle_loader = True
-learning_rate = 1e-2
+learning_rate = 1e-3
 patience = 9
 n_channels = 3
-model_version = 6
+model_version = 2
 
 project_name = f"EfficientNet_b{model_version} R2 5k ZSL"
 
-# model = CCT(out_dim=out_dim, img_shape=img_shape, model_version=model_version, n_input_channels=n_channels)
-# model = EfficientNet(64, model_version=model_version)
+model = CCT(out_dim=out_dim, img_shape=img_shape, model_version=model_version, n_input_channels=n_channels)
+# model = EfficientNet(out_dim, model_version=model_version)
 # model = Vit(out_dim=64, model_version="b", pretrained=False)
-model = Vit(out_dim=64, model_version="b", pretrained=False)
+# model = Vit(out_dim=64, model_version="b", pretrained=False)
 model = SiameseModel(model)
 
 config = Config(
@@ -49,12 +51,23 @@ config = Config(
 )
 
 csv_path = "./splits.csv"
+df = pd.read_csv(csv_path)
+split_string = f"{split}_split"
+df = df.rename(columns={split_string: "train"})
+#gambiarra
+df.loc[df["train"] == split_number, "train"] = -1
+df.loc[df["train"] > 0, "train"] = 0
+df.loc[df["train"] == -1, "train"] = 1
 
-train_loader = DocDataset(csv_path, train=True, load_in_ram=load_in_ram, img_shape=img_shape, n_channels=n_channels)
-val_loader = DocDataset(csv_path, train=False, load_in_ram=load_in_ram, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
+protocol_path = "./protocol.csv"
+protocol = pd.read_csv(protocol_path)
+protocol = protocol[(protocol["split_mode"] == split_string) & (protocol["split_number"] == split_number)]
 
-train_loader = ContrastivePairLoader(train_loader)
-val_loader = ContrastivePairLoader(val_loader)
+train_loader = DocDataset(df, train=True, load_in_ram=load_in_ram, img_shape=img_shape, n_channels=n_channels)
+val_loader = DocDataset(df, train=False, load_in_ram=load_in_ram, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
+
+train_loader = ContrastivePairLoader(train_loader, None)
+val_loader = ContrastivePairLoader(val_loader, protocol)
 
 train_loader = DataLoader(train_loader, batch_size, shuffle=shuffle_loader)
 val_loader = DataLoader(val_loader, batch_size, shuffle=False)

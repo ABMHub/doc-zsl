@@ -25,7 +25,7 @@ class DatasetTemplate:
 class DocDataset(TorchDataset, DatasetTemplate):
   def __init__(
     self,
-    csv_path: os.PathLike,
+    dataframe: pd.DataFrame,
     train: bool,
     img_shape: tuple = (224, 224),
     load_in_ram : bool = False,
@@ -34,8 +34,9 @@ class DocDataset(TorchDataset, DatasetTemplate):
     n_channels: int = 3
   ):
     super().__init__()
-    df = pd.read_csv(csv_path, index_col=False)
-    self.df = df[(df["train"] == int(not train))].sample(frac=1).reset_index(drop=True)
+    self.df = dataframe[(dataframe["train"] == int(not train))]
+    if train:
+      self.df = self.df.sample(frac=1).reset_index(drop=True)
     self.train = train
     self.img_shape = img_shape
     self.ram = load_in_ram
@@ -67,11 +68,25 @@ class DocDataset(TorchDataset, DatasetTemplate):
     return self.process_image(path), class_index
   
 class ContrastivePairLoader(TorchDataset, DatasetTemplate):
-  def __init__(self, dataset: DocDataset):
+  def __init__(self, dataset: DocDataset, protocol: pd.DataFrame = None):
     super(ContrastivePairLoader, self).__init__()
     self.dataset = dataset
     self.train = self.dataset.train
-    self.randomize_pairs()
+    if protocol is None:
+      self.randomize_pairs()
+
+    else:
+      self.prepare_protocol(protocol)
+
+  def prepare_protocol(self, protocol):
+    dic ={
+      "x1": [self.dataset.df.index.get_loc(elem) for elem in protocol["file_a_idx"].values],
+      "x2": [self.dataset.df.index.get_loc(elem) for elem in protocol["file_b_idx"].values],
+      "y": list(protocol["is_equal"].values),
+    }
+
+    self.df = pd.DataFrame(dic)
+    1+1
 
   def randomize_pairs(self):
     dic = {
@@ -105,7 +120,7 @@ class ContrastivePairLoader(TorchDataset, DatasetTemplate):
     self.df = pd.DataFrame(dic)
 
   def __len__(self):
-    return len(self.dataset)
+    return len(self.df)
   
   def __getitem__(self, index):
     row = self.df.iloc[index]

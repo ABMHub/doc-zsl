@@ -31,15 +31,22 @@ df = pd.DataFrame(dic)
 l_df = len(df)
 l_classes = len(classes)
 
-random_sample = [0]*round(train_frac*l_df) + [1]*round(val_frac*l_df)# + [2]*round(test_frac*l_df)
-zsl_sample = [0]*round(train_frac*l_classes) + [1]*round(val_frac*l_classes)
+n_cross_val = 5
 
-gzsl_sample_c = [0]*round((train_frac/2)*l_classes) + [1]*round((val_frac/2)*l_classes)
-gzsl_sample_d = [0]*round((train_frac/2)*l_df) + [1]*round((val_frac/2)*l_df)
+zsl_sample = []
+gzsl_sample = []
 
-# random split
 df = df.sample(frac=1)
-df.insert(len(df.columns), "random_split", random_sample)
+
+remain = l_classes
+n_cross_val_temp = n_cross_val
+for i in range(n_cross_val):
+    split_amount = int(remain//n_cross_val_temp)
+    remain -= split_amount
+    n_cross_val_temp -= 1
+
+    zsl_sample += [i]*split_amount
+    gzsl_sample += [i]*(split_amount//2)
 
 # zsl split
 class_id_list = list(range(len(classes)))
@@ -48,8 +55,31 @@ zsl_split_indexes = {a: b for a, b in zip(class_id_list, zsl_sample)}
 zsl_split = df["class_number"].apply(lambda a: zsl_split_indexes[a])
 df.insert(len(df.columns), "zsl_split", zsl_split)
 
+df = df.sample(frac=1)
+
+class_id_list = list(range(len(classes)))
+random.shuffle(class_id_list)
+gzsl_split_indexes = {a: b for a, b in zip(class_id_list, gzsl_sample)}
+gzsl_split = df["class_number"].apply(lambda a: gzsl_split_indexes.get(a, -1))
+
+remain = l_df
+n_cross_val_temp = n_cross_val
+for i in range(n_cross_val):
+    already_in_class = (gzsl_split==i).sum()
+    need_more = (remain//n_cross_val_temp) - already_in_class
+    remain -= already_in_class + need_more
+
+    j = 0
+    while need_more > 0:
+        if gzsl_split.iloc[j] == -1:
+            gzsl_split.iloc[j] = i
+            need_more -= 1
+        j += 1
+
+    n_cross_val_temp -= 1
+
+df.insert(len(df.columns), "gzsl_split", gzsl_split)
 df = df.sort_index()
 df.to_csv("./splits.csv", index=False)
-
 # random.shuffle(class_id_list)
 # gzsl_c_split_indexes = {a: b for a, b in zip(class_id_list, gzsl_sample_c)}
