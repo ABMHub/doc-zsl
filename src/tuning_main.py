@@ -44,7 +44,7 @@ parameters_dict = {
 }
 
 sweep_config = {
-  'method': 'bayes',
+  'method': 'grid',
   'metric': metric,
   "name": f"ResNet_cross_val",
   # "name": f"EfficientNet_b{model_version}_torchvision",
@@ -150,4 +150,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("jswbig1s", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("owfwkyza", function=main, count=None, project="mestrado-comparadora")
