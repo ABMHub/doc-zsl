@@ -19,7 +19,6 @@ metric = {
 model_version = 34
 
 parameters_dict = {
-  "img_side_size": {'value': 224},
   "pre_trained": {"value": False},
   'optimizer': {'value': 'sgd'},
   'learning_rate': {
@@ -38,7 +37,7 @@ parameters_dict = {
   'epochs': {"value": 1000},
   'n_channels': {"value": 3},
   'patience': {"value": 20},
-  "model_version": {"values": [18, 34, 50, 101, 152]},
+  "model_version": {"values": list(range(8))},
   "split_mode": {"values": ["zsl", "gzsl"]},
   "split_number": {"values": list(range(5))}
 }
@@ -46,7 +45,7 @@ parameters_dict = {
 sweep_config = {
   'method': 'grid',
   'metric': metric,
-  "name": f"ResNet_cross_val",
+  "name": f"EfficientNet_cross_val",
   # "name": f"EfficientNet_b{model_version}_torchvision",
   "parameters": parameters_dict
 }
@@ -54,7 +53,6 @@ sweep_config = {
 def main(config=None):
   with wandb.init(config=config):
     wdb_config = wandb.config
-    img_shape = (int(wdb_config.img_side_size), int(wdb_config.img_side_size))
     out_dim = int(wdb_config.out_dim)
     batch_size = int(wdb_config.batch_size)
     n_channels = int(wdb_config.n_channels)
@@ -74,10 +72,12 @@ def main(config=None):
 
     shuffle_loader = True
 
-    # model = EfficientNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
+    model = EfficientNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
+    img_shape = (model.im_shape, model.im_shape)
     # model = CCT(out_dim=out_dim, img_shape=img_shape)
-    model = ResNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
+    # model = ResNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
     model = SiameseModel(model)
+
 
     config = Config(
       batch_size=batch_size,
@@ -128,7 +128,7 @@ def main(config=None):
     log.create_metric("eer", EER, True)
     log.create_metric("eer", EER, False)
     # log.create_metric("lr", LR, True, scheduler=config.scheduler)
-    log.create_metric("ident", Identification, False)
+    # log.create_metric("ident", Identification, False)
 
     project_name = wandb.run.name
 
@@ -150,4 +150,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("owfwkyza", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("lz7gx2im", function=main, count=None, project="mestrado-comparadora")
