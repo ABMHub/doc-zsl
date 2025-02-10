@@ -10,6 +10,7 @@ import wandb
 import math
 from callbacks import ModelCheckpoint
 import pandas as pd
+import gc
 
 metric = {
   'name': 'val-loss',
@@ -145,6 +146,9 @@ def main(config=None):
       callbacks=[mc],
       model_save_path=f"{project_name}_last.pt"
     )
+
+    torch.cuda.empty_cache()
+    gc.collect()
 
 # sweep_id = wandb.sweep(sweep_config, project="mestrado-comparadora")
 # exit()
