@@ -68,11 +68,11 @@ class EfficientNet(torch.nn.Module):
   def __init__(self, out_dim: int = 64, model_version = 0, pretrained = True):
     super(EfficientNet, self).__init__()
     ens = {
-      0: (torchvision.models.efficientnet_b0, torchvision.models.EfficientNet_B0_Weights.DEFAULT, 256),
-      1: (torchvision.models.efficientnet_b1, torchvision.models.EfficientNet_B1_Weights.DEFAULT, 256),
+      0: (torchvision.models.efficientnet_b0, torchvision.models.EfficientNet_B0_Weights.DEFAULT, 224),
+      1: (torchvision.models.efficientnet_b1, torchvision.models.EfficientNet_B1_Weights.DEFAULT, 240),
       2: (torchvision.models.efficientnet_b2, torchvision.models.EfficientNet_B2_Weights.DEFAULT, 288),
-      3: (torchvision.models.efficientnet_b3, torchvision.models.EfficientNet_B3_Weights.DEFAULT, 320),
-      4: (torchvision.models.efficientnet_b4, torchvision.models.EfficientNet_B4_Weights.DEFAULT, 384),
+      3: (torchvision.models.efficientnet_b3, torchvision.models.EfficientNet_B3_Weights.DEFAULT, 300),
+      4: (torchvision.models.efficientnet_b4, torchvision.models.EfficientNet_B4_Weights.DEFAULT, 380),
       5: (torchvision.models.efficientnet_b5, torchvision.models.EfficientNet_B5_Weights.DEFAULT, 456),
       6: (torchvision.models.efficientnet_b6, torchvision.models.EfficientNet_B6_Weights.DEFAULT, 528),
       7: (torchvision.models.efficientnet_b7, torchvision.models.EfficientNet_B7_Weights.DEFAULT, 600),
