@@ -38,7 +38,7 @@ def pretty_print_dict(d: dict):
   for elem in d:
     print(f"\t{elem} - {d[elem]}")
 
-def train_epoch(epoch, data_loader, model, criterion, optimizer, device, log : Log):
+def train_epoch(epoch, data_loader, model, criterion, optimizer, device, log : Log, scheduler):
   model.train()
   # accelerator = Accelerator()
   # model, optimizer, data_loader = accelerator.prepare(model, optimizer, data_loader)
@@ -66,6 +66,8 @@ def train_epoch(epoch, data_loader, model, criterion, optimizer, device, log : L
       continue
 
     optimizer.step()
+    if scheduler is not None:
+      scheduler.step()
 
     log.update_metric("loss", train=TRAIN, value=loss.detach().cpu())
     log.update_all_metrics(train=TRAIN, y_true=y.detach().cpu().numpy(), y_pred=out_cpu)
@@ -139,7 +141,8 @@ def train(
         criterion=ContrastiveLoss,
         optimizer=optimizer,
         device=device,
-        log=log
+        log=log,
+        scheduler=scheduler
       )
       
       val_epoch(
@@ -152,9 +155,6 @@ def train(
       )
 
       val_loss = log.val_metrics["loss"].get_current_info()
-
-      if scheduler is not None:
-        scheduler.step(val_loss)
 
       log.end_epoch()
       train_dataloader.on_epoch_end()

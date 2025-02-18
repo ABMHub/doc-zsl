@@ -23,30 +23,30 @@ parameters_dict = {
   "pre_trained": {"value": False},
   'optimizer': {'value': 'sgd'},
   'learning_rate': {
-    'value': 1e-3
+    'value': 1e-2
   },
   "out_dim": {
     'value': 64
   },
   "momentum": {
-    'value': 0.97,
+    'values': [0, 0.9],
   },
   "w_decay": {
-    "value": 1e-5
+    "value": 0
   },
   "batch_size": {"value": 16},
-  'epochs': {"value": 1000},
+  'epochs': {"value": 100},
   'n_channels': {"value": 3},
-  'patience': {"value": 20},
-  "model_version": {"values": list(range(8))},
-  "split_mode": {"values": ["zsl", "gzsl"]},
+  'patience': {"value": 200},
+  "model_version": {"value": 1},
+  "split_mode": {"value": "zsl"},
   "split_number": {"values": list(range(5))}
 }
 
 sweep_config = {
   'method': 'grid',
   'metric': metric,
-  "name": f"EfficientNet_cross_val",
+  "name": f"EfficientNet_momentum_cosine_tune",
   # "name": f"EfficientNet_b{model_version}_torchvision",
   "parameters": parameters_dict
 }
@@ -64,6 +64,7 @@ def main(config=None):
     pre_trained = bool(wdb_config.pre_trained)
     split_number = int(wdb_config.split_number)
     split_mode = str(wdb_config.split_mode)
+    epochs = int(wdb_config.epochs)
 
     optimizers = {
       "adamw": torch.optim.AdamW,
@@ -78,22 +79,6 @@ def main(config=None):
     # model = CCT(out_dim=out_dim, img_shape=img_shape)
     # model = ResNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
     model = SiameseModel(model)
-
-
-    config = Config(
-      batch_size=batch_size,
-      criterion=ContrastiveLoss,
-      model = model,
-      shuffle_loader = True,
-      epochs=int(wdb_config.epochs),
-      scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau,
-      learning_rate=wdb_config.learning_rate,
-      img_width = img_shape[0],
-      img_height = img_shape[1],
-      optimizer=optimizers[wdb_config.optimizer],
-      momentum=momentum,
-      decay=decay
-    )
 
     csv_path = "./splits.csv"
     df = pd.read_csv(csv_path)
@@ -117,6 +102,20 @@ def main(config=None):
     train_loader = DataLoader(train_loader, batch_size, shuffle=shuffle_loader)
     val_loader = DataLoader(val_loader, batch_size, shuffle=False)
 
+    config = Config(
+      batch_size=batch_size,
+      criterion=ContrastiveLoss,
+      model = model,
+      shuffle_loader = True,
+      epochs=int(wdb_config.epochs),
+      scheduler=(torch.optim.lr_scheduler.CosineAnnealingLR, {"T_max": len(train_loader) * epochs}),
+      learning_rate=wdb_config.learning_rate,
+      img_width = img_shape[0],
+      img_height = img_shape[1],
+      optimizer=optimizers[wdb_config.optimizer],
+      momentum=momentum,
+      decay=decay
+    )
 
     # wandb_args = {
     #   "project": "mestrado-comparadora",
@@ -128,7 +127,7 @@ def main(config=None):
     log = Log(wandb_flag=True)
     log.create_metric("eer", EER, True)
     log.create_metric("eer", EER, False)
-    # log.create_metric("lr", LR, True, scheduler=config.scheduler)
+    log.create_metric("lr", LR, True, scheduler=config.scheduler)
     # log.create_metric("ident", Identification, False)
 
     project_name = wandb.run.name
@@ -154,4 +153,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("lz7gx2im", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("i5gyz055", function=main, count=None, project="mestrado-comparadora")
