@@ -20,7 +20,7 @@ metric = {
 model_version = 34
 
 parameters_dict = {
-  "pre_trained": {"value": False},
+  "pre_trained": {"value": True},
   'optimizer': {'value': 'sgd'},
   'learning_rate': {
     'value': 1e-2
@@ -29,7 +29,7 @@ parameters_dict = {
     'value': 64
   },
   "momentum": {
-    'values': [0, 0.9],
+    'values': [0, 0.9, 0.97],
   },
   "w_decay": {
     "value": 0
@@ -46,7 +46,7 @@ parameters_dict = {
 sweep_config = {
   'method': 'grid',
   'metric': metric,
-  "name": f"EfficientNet_momentum_cosine_tune",
+  "name": f"EfficientNet_momentum_cosine_tune_1e-3",
   # "name": f"EfficientNet_b{model_version}_torchvision",
   "parameters": parameters_dict
 }
@@ -153,4 +153,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("i5gyz055", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("gnkmseac", function=main, count=None, project="mestrado-comparadora")
