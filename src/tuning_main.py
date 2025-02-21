@@ -32,7 +32,7 @@ parameters_dict = {
     'value': 0.97,
   },
   "w_decay": {
-    "values": [1e-4, 1e-5, 1e-6, 1e-7, 0]
+    "values": [1e-4, 1e-5, 1e-6, 1e-7]
   },
   "batch_size": {"value": 16},
   'epochs': {"value": 100},
@@ -46,7 +46,7 @@ parameters_dict = {
 sweep_config = {
   'method': 'grid',
   'metric': metric,
-  "name": f"EfficientNet_momentum_cosine_tune_1e-3",
+  "name": f"EfficientNet_weight_decay_cosine_tune_1e-2",
   # "name": f"EfficientNet_b{model_version}_torchvision",
   "parameters": parameters_dict
 }
