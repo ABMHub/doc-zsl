@@ -153,4 +153,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("dlretyut", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("qxb6nx8v", function=main, count=None, project="mestrado-comparadora")
