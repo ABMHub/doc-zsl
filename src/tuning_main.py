@@ -29,10 +29,10 @@ parameters_dict = {
     'value': 64
   },
   "momentum": {
-    'values': [0, 0.9, 0.97],
+    'value': 0.97,
   },
   "w_decay": {
-    "value": 0
+    "values": [1e-4, 1e-5, 1e-6, 1e-7, 0]
   },
   "batch_size": {"value": 16},
   'epochs': {"value": 100},
@@ -153,4 +153,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("gnkmseac", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("dlretyut", function=main, count=None, project="mestrado-comparadora")
