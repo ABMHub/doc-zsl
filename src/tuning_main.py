@@ -23,7 +23,7 @@ parameters_dict = {
   "pre_trained": {"value": True},
   'optimizer': {'value': 'sgd'},
   'learning_rate': {
-    'value': 1e-3
+    'value': 1e-4
   },
   "out_dim": {
     'value': 64
@@ -153,4 +153,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("z939gmc8", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("jbrz0846", function=main, count=None, project="mestrado-comparadora")
