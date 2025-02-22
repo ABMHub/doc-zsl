@@ -32,7 +32,7 @@ parameters_dict = {
     'value': 0.97,
   },
   "w_decay": {
-    "values": [1e-4, 1e-5, 1e-6, 1e-7]
+    "values": [1e-1, 1e-2, 1e-3]
   },
   "batch_size": {"value": 16},
   'epochs': {"value": 100},
@@ -153,4 +153,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("qxb6nx8v", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("rse98vlx", function=main, count=None, project="mestrado-comparadora")
