@@ -23,7 +23,7 @@ parameters_dict = {
   "pre_trained": {"value": True},
   'optimizer': {'value': 'sgd'},
   'learning_rate': {
-    'value': 1e-2
+    'value': 1e-3
   },
   "out_dim": {
     'value': 64
@@ -32,7 +32,7 @@ parameters_dict = {
     'value': 0.97,
   },
   "w_decay": {
-    "values": [1e-1, 1e-2, 1e-3]
+    "value": 0
   },
   "batch_size": {"value": 16},
   'epochs': {"value": 100},
@@ -46,7 +46,7 @@ parameters_dict = {
 sweep_config = {
   'method': 'grid',
   'metric': metric,
-  "name": f"EfficientNet_weight_decay_cosine_tune_1e-2",
+  "name": f"EfficientNet_lr_cosine_tune_1e-3",
   # "name": f"EfficientNet_b{model_version}_torchvision",
   "parameters": parameters_dict
 }
@@ -153,4 +153,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("rse98vlx", function=main, count=None, project="mestrado-comparadora")
+wandb.agent("z939gmc8", function=main, count=None, project="mestrado-comparadora")
