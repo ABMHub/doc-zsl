@@ -37,7 +37,7 @@ parameters_dict = {
   "split_number":       {"values": list(range(5))}
 }
 
-project_name = "ResNet"
+project_name = "ViT"
 
 sweep_config = {
   'method': 'grid',
@@ -77,11 +77,12 @@ def main(config=None):
     shuffle_loader = True
 
     model_dict = {
-      "cvms15wv": ResNet,
-      "kd6xoywv": Vit
+      "cvms15wv": (ResNet, "ResNet"),
+      "trux30mf": (Vit, "ViT")
     }
 
-    model = model_dict[wandb.run.sweep_id](out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
+    model, project_name = model_dict[wandb.run.sweep_id]
+    model = model(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
 
     # model = EfficientNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
     # model = CCT(out_dim=out_dim, img_shape=img_shape)
@@ -165,4 +166,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("kd6xoywv", function=main, count=None, project="icdar-experiments")
+wandb.agent("trux30mf", function=main, count=None, project="icdar-experiments")
