@@ -34,7 +34,7 @@ class DocDataset(TorchDataset, DatasetTemplate):
     n_channels: int = 3
   ):
     super().__init__()
-    self.df = dataframe[(dataframe["train"] == int(not train))]
+    self.df = dataframe[(dataframe["split"] == int(not train))]
     if train:
       self.df = self.df.sample(frac=1).reset_index(drop=True)
     self.train = train
@@ -44,7 +44,7 @@ class DocDataset(TorchDataset, DatasetTemplate):
     self.n_channels = n_channels
     if self.ram:
       print("Preprocessing dataset")
-      self.processed_ds = [self.process_image(self.df.iloc[i]["file_path"]) for i in tqdm(range(len(self.df)))]
+      self.processed_ds = [self.process_image(self.df.iloc[i]["doc_path"]) for i in tqdm(range(len(self.df)))]
       # print(torch.std_mean(torch.stack(self.processed_ds, dim=0), dim=None))
     
   def __len__(self):
@@ -61,11 +61,11 @@ class DocDataset(TorchDataset, DatasetTemplate):
 
   def __getitem__(self, index):
     row = self.df.iloc[index]
-    path, class_index = row["file_path"], row["class_index"]
+    path, class_number = row["doc_path"], row["class_number"]
     if self.ram:
-      return self.processed_ds[index], class_index
+      return self.processed_ds[index], class_number
     # else
-    return self.process_image(path), class_index
+    return self.process_image(path), class_number
   
 class ContrastivePairLoader(TorchDataset, DatasetTemplate):
   def __init__(self, dataset: DocDataset, protocol: pd.DataFrame = None):
@@ -98,18 +98,18 @@ class ContrastivePairLoader(TorchDataset, DatasetTemplate):
     ds_df = self.dataset.df
 
     for i in range(len(self.dataset)):
-      file_path = ds_df.iloc[i]["file_path"]
-      class_index = ds_df.iloc[i]["class_index"]
+      file_path = ds_df.iloc[i]["doc_path"]
+      class_number = ds_df.iloc[i]["class_number"]
       y = random.getrandbits(1)
       op = operator.eq if y else operator.ne
 
       # se y == 1, escolhe um aleatorio da mesma classe
       # se y == 0, escolhe um aleatorio de outra classe
-      data_filter = op(ds_df["class_index"], class_index)
-      data_filter = data_filter & (ds_df["file_path"] != file_path)
+      data_filter = op(ds_df["class_number"], class_number)
+      data_filter = data_filter & (ds_df["doc_path"] != file_path)
       filtered_data = ds_df[data_filter]
       if len(filtered_data) < 1:
-        data_filter = (ds_df["class_index"] != class_index) & (ds_df["file_path"] != file_path)
+        data_filter = (ds_df["class_number"] != class_number) & (ds_df["doc_path"] != file_path)
         filtered_data = ds_df[data_filter]
 
       index = filtered_data.sample(n=1).index[0]

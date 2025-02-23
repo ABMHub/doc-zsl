@@ -20,6 +20,7 @@ class Vit(torch.nn.Module):  # modelo poderoso e grande, aprende com muitos dado
     self.model = model(weights=w)
 
     self.model.heads.head = torch.nn.Linear(in_features=self.model.hidden_dim, out_features=out_dim)
+    self.im_shape = 224
 
   def forward(self, x):
     return self.model(x)
@@ -123,6 +124,7 @@ class ResNet(torch.nn.Module):
     lin = torch.nn.Linear(in_features, out_dim)
 
     self.model.fc = lin
+    self.im_shape = 224
 
   def forward(self, x):
     return self.model(x)
