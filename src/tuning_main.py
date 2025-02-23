@@ -32,7 +32,7 @@ parameters_dict = {
   'n_channels':         {"value": 3},
   'patience':           {"value": 200},
 
-  "aaa_model_version":  {"values": [18, 34, 50, 101, 152]},
+  "aaa_model_version":  {"values": ["b", "l"]},
   "split_mode":         {"values": ["zsl", "gzsl"]},
   "split_number":       {"values": list(range(5))}
 }
@@ -76,10 +76,17 @@ def main(config=None):
 
     shuffle_loader = True
 
+    model_dict = {
+      "cvms15wv": ResNet,
+      "kd6xoywv": Vit
+    }
+
+    model = model_dict[wandb.run.sweep_id](out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
+
     # model = EfficientNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
-    model = ResNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
-    img_shape = (model.im_shape, model.im_shape)
     # model = CCT(out_dim=out_dim, img_shape=img_shape)
+
+    img_shape = (model.im_shape, model.im_shape)
     model = SiameseModel(model)
 
     csv_path = f"./train_{split_mode}.csv"
@@ -158,4 +165,4 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("cvms15wv", function=main, count=None, project="icdar-experiments")
+wandb.agent("kd6xoywv", function=main, count=None, project="icdar-experiments")
