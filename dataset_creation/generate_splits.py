@@ -12,9 +12,6 @@ dic = {
     "class_number": [],
     "doc_path": [],
     "doc_id": [],
-    # "random_split": [],
-    # "zsl_split":[],
-    # "gzsl_split": [],
 }
 
 classes = os.listdir(dataset_path)
@@ -22,16 +19,17 @@ for i, class_ in enumerate(classes):
     class_folder_path = os.path.join(dataset_path, class_)
     docs = os.listdir(class_folder_path)
     for doc in docs:
-        dic["doc_id"].append(doc)
-        dic["doc_path"].append(os.path.join(class_folder_path, doc))
-        dic["class_name"].append(class_)
-        dic["class_number"].append(i)
+        if doc.endswith(".tif"):
+            dic["doc_id"].append(doc)
+            dic["doc_path"].append(os.path.join(class_folder_path, doc))
+            dic["class_name"].append(class_)
+            dic["class_number"].append(i)
 
 df = pd.DataFrame(dic)
 l_df = len(df)
 l_classes = len(classes)
 
-n_cross_val = 5
+n_cross_val = 6
 
 zsl_sample = []
 gzsl_sample = []
@@ -55,6 +53,7 @@ zsl_split_indexes = {a: b for a, b in zip(class_id_list, zsl_sample)}
 zsl_split = df["class_number"].apply(lambda a: zsl_split_indexes[a])
 df.insert(len(df.columns), "zsl_split", zsl_split)
 
+# gzsl split
 df = df.sample(frac=1)
 
 class_id_list = list(range(len(classes)))
@@ -79,7 +78,7 @@ for i in range(n_cross_val):
     n_cross_val_temp -= 1
 
 df.insert(len(df.columns), "gzsl_split", gzsl_split)
+
+# end
 df = df.sort_index()
 df.to_csv("./splits.csv", index=False)
-# random.shuffle(class_id_list)
-# gzsl_c_split_indexes = {a: b for a, b in zip(class_id_list, gzsl_sample_c)}
