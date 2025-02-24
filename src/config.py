@@ -18,8 +18,8 @@ class Config:
     self.learning_rate = learning_rate
     self.criterion = criterion
     self.model = model
-    self.optimizer = optimizer(model.parameters(), lr=self.learning_rate, momentum=momentum, weight_decay=decay)
-    self.scheduler = None if scheduler is None else scheduler[0](self.optimizer, **scheduler[1])
+    self.optimizer = optimizer
+    self.scheduler = scheduler
     self.kwargs = kwargs
 
   def config_dict(self):

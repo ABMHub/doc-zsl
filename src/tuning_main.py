@@ -1,6 +1,6 @@
 from trainer import train
 from config import Config
-from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet
+from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, SiameseModelUnit, DenseNet, AlexNet
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
 from metrics import EER, LR, Identification
@@ -18,26 +18,21 @@ metric = {
   'goal': 'minimize'
 }
 
-model_version = 34
-
 parameters_dict = {
   "pre_trained":        {"value": True},
-  'optimizer':          {'value': 'sgd'},
-  'learning_rate':      {'value': 1e-2},
   "out_dim":            {'value': 64},
-  "momentum":           {'value': 0.97,},
-  "w_decay":            {"value": 0},
   "batch_size":         {"value": 16},
-  'epochs':             {"value": 100},
+  'epochs':             {"value": 90},
   'n_channels':         {"value": 3},
   'patience':           {"value": 200},
+  "scheduler_step":     {"value": 30},
 
-  "aaa_model_version":  {"values": ["b", "l"]},
+  "aaa_model_version":  {"values": [18, 34, 50, 101, 152]},
   "split_mode":         {"values": ["zsl", "gzsl"]},
   "split_number":       {"values": list(range(5))}
 }
 
-project_name = "ViT"
+project_name = "Resnet T2"
 
 sweep_config = {
   'method': 'grid',
@@ -61,28 +56,30 @@ def main(config=None):
     n_channels = int(wdb_config.n_channels)
     patience = int(wdb_config.patience)
     model_version = wdb_config.aaa_model_version
-    momentum = float(wdb_config.momentum)
-    decay = float(wdb_config.w_decay)
     pre_trained = bool(wdb_config.pre_trained)
     split_number = int(wdb_config.split_number)
     split_mode = str(wdb_config.split_mode)
     epochs = int(wdb_config.epochs)
-
-    optimizers = {
-      "adamw": torch.optim.AdamW,
-      "adam": torch.optim.Adam,
-      "sgd": torch.optim.SGD
-    }
-
-    shuffle_loader = True
+    scheduler_step = wdb_config.scheduler_step
 
     model_dict = {
-      "cvms15wv": (ResNet, "ResNet"),
-      "trux30mf": (Vit, "ViT")
+      "ak55hy5u": (ResNet, "ResNet"),
+      "trux30mf": (Vit, "ViT"),
+      "k151sfrd": (DenseNet, "DenseNet"),
+      "3yzu0li3": (AlexNet, "AlexNet"),
     }
 
+    model: SiameseModelUnit
     model, project_name = model_dict[wandb.run.sweep_id]
     model = model(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
+
+    learning_rate = model.learning_rate
+    decay = model.weight_decay
+    momentum = model.momentum
+    optimizer = model.optimizer
+    scheduler = model.scheduler
+    
+    shuffle_loader = True
 
     # model = EfficientNet(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
     # model = CCT(out_dim=out_dim, img_shape=img_shape)
@@ -117,12 +114,13 @@ def main(config=None):
       criterion=ContrastiveLoss,
       model = model,
       shuffle_loader = True,
-      epochs=int(wdb_config.epochs),
-      scheduler=(torch.optim.lr_scheduler.CosineAnnealingLR, {"T_max": len(train_loader) * epochs}),
-      learning_rate=wdb_config.learning_rate,
+      epochs=epochs,
+      scheduler=scheduler(optimizer, len(train_loader) * scheduler_step),
+      # scheduler=(torch.optim.lr_scheduler.CosineAnnealingLR(), {"T_max": len(train_loader) * epochs}),
+      learning_rate=learning_rate,
       img_width = img_shape[0],
       img_height = img_shape[1],
-      optimizer=optimizers[wdb_config.optimizer],
+      optimizer=optimizer,
       momentum=momentum,
       decay=decay
     )
@@ -166,4 +164,6 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("trux30mf", function=main, count=None, project="icdar-experiments")
+# wandb.agent("k151sfrd", function=main, count=None, project="icdar-experiments") # densenet
+# wandb.agent("3yzu0li3", function=main, count=None, project="icdar-experiments") # Alexnet
+wandb.agent("ak55hy5u", function=main, count=None, project="icdar-experiments")
