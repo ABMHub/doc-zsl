@@ -63,7 +63,7 @@ def main(config=None):
     scheduler_step = wdb_config.scheduler_step
 
     model_dict = {
-      "ak55hy5u": (ResNet, "ResNet"),
+      "ak55hy5u": (ResNet, "ResNet T2"),
       "trux30mf": (Vit, "ViT"),
       "k151sfrd": (DenseNet, "DenseNet"),
       "3yzu0li3": (AlexNet, "AlexNet"),

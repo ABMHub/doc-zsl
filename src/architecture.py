@@ -11,7 +11,10 @@ class SiameseModelUnit(torch.nn.Module):
     self.momentum = 0.9
     self.weight_decay = 1e-4
     self.scheduler = torch.optim.lr_scheduler.StepLR
-    self.name = "model"
+
+  @property
+  def name(self):
+    return "model"
 
   def forward(self, x):
     return self.model(x)
