@@ -1,6 +1,6 @@
 from trainer import train
 from config import Config
-from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, SiameseModelUnit, DenseNet, AlexNet
+from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, SiameseModelUnit, DenseNet, AlexNet, VGG
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
 from metrics import EER, LR, Identification
@@ -27,12 +27,12 @@ parameters_dict = {
   'patience':           {"value": 200},
   "scheduler_step":     {"value": 30},
 
-  "aaa_model_version":  {"values": [18, 34, 50, 101, 152]},
+  "aaa_model_version":  {"values": [11, 13, 16, 19]},
   "split_mode":         {"values": ["zsl", "gzsl"]},
   "split_number":       {"values": list(range(5))}
 }
 
-project_name = "Resnet T2"
+project_name = "VGG"
 
 sweep_config = {
   'method': 'grid',
@@ -67,6 +67,7 @@ def main(config=None):
       "trux30mf": (Vit, "ViT"),
       "k151sfrd": (DenseNet, "DenseNet"),
       "3yzu0li3": (AlexNet, "AlexNet"),
+      "vo5zn89m": (VGG, "VGG"),
     }
 
     model: SiameseModelUnit
@@ -166,4 +167,5 @@ def main(config=None):
 # wandb.agent(sweep_id, function=main, count=None)
 # wandb.agent("k151sfrd", function=main, count=None, project="icdar-experiments") # densenet
 # wandb.agent("3yzu0li3", function=main, count=None, project="icdar-experiments") # Alexnet
-wandb.agent("ak55hy5u", function=main, count=None, project="icdar-experiments")
+# wandb.agent("ak55hy5u", function=main, count=None, project="icdar-experiments") # resnet t2
+wandb.agent("vo5zn89m", function=main, count=None, project="icdar-experiments") # vgg

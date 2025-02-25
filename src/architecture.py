@@ -57,7 +57,7 @@ class DenseNet(SiameseModelUnit):
 
 class VGG(SiameseModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 11, pretrained: bool = True):
-    super(DenseNet, self).__init__()
+    super(VGG, self).__init__()
     ens = {
       11: (torchvision.models.vgg11, torchvision.models.VGG11_Weights.DEFAULT),
       13: (torchvision.models.vgg13, torchvision.models.VGG13_Weights.DEFAULT),
@@ -70,7 +70,7 @@ class VGG(SiameseModelUnit):
     ln: torch.nn.Linear = self.model.classifier[-1]
     self.model.classifier[-1] = torch.nn.Linear(ln.in_features, out_dim)
 
-    self.learning_rate = 1e-3
+    self.learning_rate = 1e-2
 
 class Efficient(SiameseModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 11, pretrained: bool = True):
