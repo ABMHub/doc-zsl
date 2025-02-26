@@ -1,6 +1,6 @@
 from trainer import train
 from config import Config
-from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, SiameseModelUnit, DenseNet, AlexNet, VGG
+from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, SiameseModelUnit, DenseNet, AlexNet, VGG, EfficientNetV2, MobileNetV3
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
 from metrics import EER, LR, Identification
@@ -25,14 +25,14 @@ parameters_dict = {
   'epochs':             {"value": 90},
   'n_channels':         {"value": 3},
   'patience':           {"value": 200},
-  "scheduler_step":     {"value": 30},
+  "scheduler_step":     {"value": 2},
 
-  "aaa_model_version":  {"values": [11, 13, 16, 19]},
+  "aaa_model_version":  {"values": ["small", "large"]},
   "split_mode":         {"values": ["zsl", "gzsl"]},
   "split_number":       {"values": list(range(5))}
 }
 
-project_name = "VGG"
+project_name = "MobileNetV3"
 
 sweep_config = {
   'method': 'grid',
@@ -68,6 +68,8 @@ def main(config=None):
       "k151sfrd": (DenseNet, "DenseNet"),
       "3yzu0li3": (AlexNet, "AlexNet"),
       "vo5zn89m": (VGG, "VGG"),
+      "emb7e2fs": (EfficientNetV2, "EfficientNetV2"),
+      "lr0vqxlb": (MobileNetV3, "MobileNetV3"),
     }
 
     model: SiameseModelUnit
@@ -79,6 +81,7 @@ def main(config=None):
     momentum = model.momentum
     optimizer = model.optimizer
     scheduler = model.scheduler
+    lr_gamma = model.lr_gamma
     
     shuffle_loader = True
 
@@ -116,7 +119,7 @@ def main(config=None):
       model = model,
       shuffle_loader = True,
       epochs=epochs,
-      scheduler=scheduler(optimizer, len(train_loader) * scheduler_step),
+      scheduler=scheduler(optimizer, len(train_loader) * scheduler_step, lr_gamma),
       # scheduler=(torch.optim.lr_scheduler.CosineAnnealingLR(), {"T_max": len(train_loader) * epochs}),
       learning_rate=learning_rate,
       img_width = img_shape[0],
@@ -168,4 +171,6 @@ def main(config=None):
 # wandb.agent("k151sfrd", function=main, count=None, project="icdar-experiments") # densenet
 # wandb.agent("3yzu0li3", function=main, count=None, project="icdar-experiments") # Alexnet
 # wandb.agent("ak55hy5u", function=main, count=None, project="icdar-experiments") # resnet t2
-wandb.agent("vo5zn89m", function=main, count=None, project="icdar-experiments") # vgg
+# wandb.agent("vo5zn89m", function=main, count=None, project="icdar-experiments") # vgg
+# wandb.agent("emb7e2fs", function=main, count=None, project="icdar-experiments") # efficientnet v2
+wandb.agent("lr0vqxlb", function=main, count=None, project="icdar-experiments") # mobilenet v3

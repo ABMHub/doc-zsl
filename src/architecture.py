@@ -11,6 +11,7 @@ class SiameseModelUnit(torch.nn.Module):
     self.momentum = 0.9
     self.weight_decay = 1e-4
     self.scheduler = torch.optim.lr_scheduler.StepLR
+    self.lr_gamma = 0.1
 
   @property
   def name(self):
@@ -69,8 +70,6 @@ class VGG(SiameseModelUnit):
     self.model = model(weights = w if pretrained else None)
     ln: torch.nn.Linear = self.model.classifier[-1]
     self.model.classifier[-1] = torch.nn.Linear(ln.in_features, out_dim)
-
-    self.learning_rate = 1e-2
 
 class Efficient(SiameseModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 11, pretrained: bool = True):
@@ -176,6 +175,66 @@ class EfficientNet(SiameseModelUnit):
   def name(self):
     return f"efficient_net_b{self.model_version}"
 
+class EfficientNetV2(SiameseModelUnit):
+  def __init__(self, out_dim: int = 64, model_version = 's', pretrained = True):
+    super(EfficientNetV2, self).__init__()
+    ens = {
+      's': (torchvision.models.efficientnet_v2_s, torchvision.models.EfficientNet_V2_S_Weights.DEFAULT, 384),
+      'm': (torchvision.models.efficientnet_v2_m, torchvision.models.EfficientNet_V2_M_Weights.DEFAULT, 480),
+      'l': (torchvision.models.efficientnet_v2_l, torchvision.models.EfficientNet_V2_L_Weights.DEFAULT, 480),
+    }
+
+    self.model_version = model_version
+    model, w, self.im_shape = ens[model_version]
+
+    if not pretrained:
+      w = None
+
+    self.model = model(weights=w)
+    in_features = self.model.classifier[1].in_features
+
+    lin = torch.nn.Linear(in_features, out_dim)
+    self.model.classifier[1] = lin
+
+    self.weight_decay = 0.00002
+    self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR
+    self.lr_gamma = 0
+
+  @property
+  def name(self):
+    return f"efficient_net_b{self.model_version}"
+
+class MobileNetV3(SiameseModelUnit):
+  def __init__(self, out_dim: int = 64, model_version = 0, pretrained = True):
+    super(MobileNetV3, self).__init__()
+    ens = {
+      'small': (torchvision.models.mobilenet_v3_small, torchvision.models.MobileNet_V3_Small_Weights.DEFAULT, 224),
+      'large': (torchvision.models.mobilenet_v3_large, torchvision.models.MobileNet_V3_Large_Weights.DEFAULT, 224),
+    }
+
+    self.model_version = model_version
+    model, w, self.im_shape = ens[model_version]
+
+    self.model = model(weights = w if pretrained else None)
+    ln: torch.nn.Linear = self.model.classifier[-1]
+    self.model.classifier[-1] = torch.nn.Linear(ln.in_features, out_dim)
+
+    self.learning_rate = 0.01
+    self.weight_decay = 0.00001
+    self.lr_gamma = 0.973
+
+  @property
+  def optimizer(self):
+    return torch.optim.RMSprop(
+      self.model.parameters(), 
+      self.learning_rate, 
+      weight_decay=self.weight_decay
+    )
+
+  @property
+  def name(self):
+    return f"efficient_net_b{self.model_version}"
+  
 class ResNet(SiameseModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 18, pretrained = True):
     super(ResNet, self).__init__()
