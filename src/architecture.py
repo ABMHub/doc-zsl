@@ -91,6 +91,7 @@ class Vit(SiameseModelUnit):  # modelo poderoso e grande, aprende com muitos dad
     self.model.heads.head = torch.nn.Linear(in_features=self.model.hidden_dim, out_features=out_dim)
     self.learning_rate = 1e-3
     self.weight_decay = 0.3
+    self.lr_gamma = 0
     self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR
 
   @property
