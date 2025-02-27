@@ -71,22 +71,6 @@ class VGG(SiameseModelUnit):
     ln: torch.nn.Linear = self.model.classifier[-1]
     self.model.classifier[-1] = torch.nn.Linear(ln.in_features, out_dim)
 
-class Efficient(SiameseModelUnit):
-  def __init__(self, out_dim: int = 64, model_version = 11, pretrained: bool = True):
-    super(DenseNet, self).__init__()
-    ens = {
-      11: (torchvision.models.vgg11, torchvision.models.VGG11_Weights.DEFAULT),
-      13: (torchvision.models.vgg13, torchvision.models.VGG13_Weights.DEFAULT),
-      16: (torchvision.models.vgg16, torchvision.models.VGG16_Weights.DEFAULT),
-      19: (torchvision.models.vgg19, torchvision.models.VGG19_Weights.DEFAULT),
-    }
-
-    model, w = ens[model_version]
-    ln: torch.nn.Linear = self.model.classifier[-1]
-    self.model.classifier[-1] = torch.nn.Linear(ln.in_features, out_dim)
-
-    self.learning_rate = 1e-3
-
 class Vit(SiameseModelUnit):  # modelo poderoso e grande, aprende com muitos dados
   def __init__(self, out_dim: int = 64, model_version = "b", pretrained: bool = True):
     super(Vit, self).__init__()
@@ -105,6 +89,17 @@ class Vit(SiameseModelUnit):  # modelo poderoso e grande, aprende com muitos dad
     self.model = model(weights=w)
 
     self.model.heads.head = torch.nn.Linear(in_features=self.model.hidden_dim, out_features=out_dim)
+    self.learning_rate = 1e-3
+    self.weight_decay = 0.3
+    self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR
+
+  @property
+  def optimizer(self):
+    return torch.optim.AdamW(
+      self.model.parameters(), 
+      self.learning_rate, 
+      weight_decay=self.weight_decay
+    )
 
   @property
   def name(self):

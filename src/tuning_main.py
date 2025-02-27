@@ -24,15 +24,15 @@ parameters_dict = {
   "batch_size":         {"value": 16},
   'epochs':             {"value": 90},
   'n_channels':         {"value": 3},
-  'patience':           {"value": 200},
-  "scheduler_step":     {"value": 2},
+  'patience':           {"value": 1e5},
+  "scheduler_step":     {"value": 90},
 
-  "aaa_model_version":  {"values": ["small", "large"]},
+  "aaa_model_version":  {"values": ["b", "l"]},
   "split_mode":         {"values": ["zsl", "gzsl"]},
   "split_number":       {"values": list(range(5))}
 }
 
-project_name = "MobileNetV3"
+project_name = "ViT"
 
 sweep_config = {
   'method': 'grid',
@@ -64,12 +64,13 @@ def main(config=None):
 
     model_dict = {
       "ak55hy5u": (ResNet, "ResNet T2"),
-      "trux30mf": (Vit, "ViT"),
+      "d2cfk3o7": (Vit, "ViT"),
       "k151sfrd": (DenseNet, "DenseNet"),
       "3yzu0li3": (AlexNet, "AlexNet"),
       "vo5zn89m": (VGG, "VGG"),
       "emb7e2fs": (EfficientNetV2, "EfficientNetV2"),
-      "lr0vqxlb": (MobileNetV3, "MobileNetV3"),
+      "l2jrbgze": (MobileNetV3, "MobileNetV3"),
+      "nbxz2o7j": (EfficientNet, "EfficientNet"),
     }
 
     model: SiameseModelUnit
@@ -172,5 +173,7 @@ def main(config=None):
 # wandb.agent("3yzu0li3", function=main, count=None, project="icdar-experiments") # Alexnet
 # wandb.agent("ak55hy5u", function=main, count=None, project="icdar-experiments") # resnet t2
 # wandb.agent("vo5zn89m", function=main, count=None, project="icdar-experiments") # vgg
+# wandb.agent("lr0vqxlb", function=main, count=None, project="icdar-experiments") # mobilenet v3
 # wandb.agent("emb7e2fs", function=main, count=None, project="icdar-experiments") # efficientnet v2
-wandb.agent("lr0vqxlb", function=main, count=None, project="icdar-experiments") # mobilenet v3
+# wandb.agent("nbxz2o7j", function=main, count=None, project="icdar-experiments") # efficientnet
+wandb.agent("d2cfk3o7", function=main, count=None, project="icdar-experiments") # vit
