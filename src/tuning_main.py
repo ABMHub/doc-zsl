@@ -1,6 +1,6 @@
 from trainer import train
 from config import Config
-from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, SiameseModelUnit, DenseNet, AlexNet, VGG, EfficientNetV2, MobileNetV3
+from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, SiameseModelUnit, DenseNet, AlexNet, VGG, EfficientNetV2, MobileNetV3, ConvNext
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
 from metrics import EER, LR, Identification
@@ -27,12 +27,12 @@ parameters_dict = {
   'patience':           {"value": 1e5},
   "scheduler_step":     {"value": 90},
 
-  "aaa_model_version":  {"values": ["b", "l"]},
+  "aaa_model_version":  {"values": ["tiny", "small", "base", "large"]},
   "split_mode":         {"values": ["zsl", "gzsl"]},
   "split_number":       {"values": list(range(5))}
 }
 
-project_name = "ViT"
+project_name = "ConvNext"
 
 sweep_config = {
   'method': 'grid',
@@ -71,6 +71,7 @@ def main(config=None):
       "emb7e2fs": (EfficientNetV2, "EfficientNetV2"),
       "l2jrbgze": (MobileNetV3, "MobileNetV3"),
       "nbxz2o7j": (EfficientNet, "EfficientNet"),
+      "xm0u9xr6": (ConvNext, "ConvNext"),
     }
 
     model: SiameseModelUnit
@@ -173,7 +174,8 @@ def main(config=None):
 # wandb.agent("3yzu0li3", function=main, count=None, project="icdar-experiments") # Alexnet
 # wandb.agent("ak55hy5u", function=main, count=None, project="icdar-experiments") # resnet t2
 # wandb.agent("vo5zn89m", function=main, count=None, project="icdar-experiments") # vgg
-# wandb.agent("lr0vqxlb", function=main, count=None, project="icdar-experiments") # mobilenet v3
+# wandb.agent("l2jrbgze", function=main, count=None, project="icdar-experiments") # mobilenet v3
 # wandb.agent("emb7e2fs", function=main, count=None, project="icdar-experiments") # efficientnet v2
 # wandb.agent("nbxz2o7j", function=main, count=None, project="icdar-experiments") # efficientnet
-wandb.agent("d2cfk3o7", function=main, count=None, project="icdar-experiments") # vit
+# wandb.agent("d2cfk3o7", function=main, count=None, project="icdar-experiments") # vit
+wandb.agent("xm0u9xr6", function=main, count=None, project="icdar-experiments") # convnext

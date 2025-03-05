@@ -216,7 +216,7 @@ class MobileNetV3(SiameseModelUnit):
     self.model.classifier[-1] = torch.nn.Linear(ln.in_features, out_dim)
 
     self.learning_rate = 0.01
-    self.weight_decay = 0.00001
+    self.weight_decay = 1e-5
     self.lr_gamma = 0.973
 
   @property
@@ -257,6 +257,39 @@ class ResNet(SiameseModelUnit):
   @property
   def name(self):
     return f"resnet{self.model_version}"
+
+class ConvNext(SiameseModelUnit):
+  def __init__(self, out_dim: int = 64, model_version = 18, pretrained = True):
+    super(ConvNext, self).__init__()
+    ens = {
+      "tiny": (torchvision.models.convnext_tiny, torchvision.models.ConvNeXt_Tiny_Weights.DEFAULT),
+      "small": (torchvision.models.convnext_small, torchvision.models.ConvNeXt_Small_Weights.DEFAULT),
+      "base": (torchvision.models.convnext_base, torchvision.models.ConvNeXt_Base_Weights.DEFAULT),
+      "large": (torchvision.models.convnext_large, torchvision.models.ConvNeXt_Large_Weights.DEFAULT),
+    }
+
+    model, w = ens[model_version]
+    self.model = model(weights = w if pretrained else None)
+    ln: torch.nn.Linear = self.model.classifier[-1]
+    self.model.classifier[-1] = torch.nn.Linear(ln.in_features, out_dim)
+
+    self.learning_rate = 1e-3
+    self.weight_decay = 1e-5
+    self.lr_gamma = 0
+    self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR
+
+  @property
+  def optimizer(self):
+    return torch.optim.AdamW(
+      self.model.parameters(), 
+      self.learning_rate, 
+      weight_decay=self.weight_decay
+    )
+
+  @property
+  def name(self):
+    return f"resnet{self.model_version}"
+
 
 class SiameseModel(torch.nn.Module):
   def __init__(self, model: torch.nn.Module):
