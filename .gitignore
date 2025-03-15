@@ -5,3 +5,5 @@
 __pycache__
 *.pt
 *.ipynb
+*.png
+*.pdf

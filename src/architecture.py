@@ -28,6 +28,16 @@ class SiameseModelUnit(torch.nn.Module):
       self.momentum, 
       weight_decay=self.weight_decay
     )
+  
+  @property
+  def number_of_params(self):
+    pp=0
+    for p in list(self.model.parameters()):
+        nn=1
+        for s in list(p.size()):
+            nn = nn*s
+        pp += nn
+    return pp
 
 class AlexNet(SiameseModelUnit):
   def __init__(self, out_dim: int = 64, pretrained: bool = True, **kwargs):
@@ -65,11 +75,16 @@ class VGG(SiameseModelUnit):
       16: (torchvision.models.vgg16, torchvision.models.VGG16_Weights.DEFAULT),
       19: (torchvision.models.vgg19, torchvision.models.VGG19_Weights.DEFAULT),
     }
+    self.model_version = model_version
 
     model, w = ens[model_version]
     self.model = model(weights = w if pretrained else None)
     ln: torch.nn.Linear = self.model.classifier[-1]
     self.model.classifier[-1] = torch.nn.Linear(ln.in_features, out_dim)
+
+  @property
+  def name(self):
+    return f"VGG_{self.model_version}_32"
 
 class Vit(SiameseModelUnit):  # modelo poderoso e grande, aprende com muitos dados
   def __init__(self, out_dim: int = 64, model_version = "b", pretrained: bool = True):
@@ -229,7 +244,7 @@ class MobileNetV3(SiameseModelUnit):
 
   @property
   def name(self):
-    return f"efficient_net_b{self.model_version}"
+    return f"MobileNetV3-{self.model_version}"
   
 class ResNet(SiameseModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 18, pretrained = True):
