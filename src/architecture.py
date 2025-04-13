@@ -2,10 +2,11 @@ import torch
 import torch.optim.sgd
 import torchvision
 from vit_pytorch import cct
+from typing import Tuple
 
-class SiameseModelUnit(torch.nn.Module):
+class ModelUnit(torch.nn.Module):
   def __init__(self):
-    super(SiameseModelUnit, self).__init__()
+    super(ModelUnit, self).__init__()
     self.im_shape = 224
     self.learning_rate = 1e-2
     self.momentum = 0.9
@@ -39,7 +40,7 @@ class SiameseModelUnit(torch.nn.Module):
         pp += nn
     return pp
 
-class AlexNet(SiameseModelUnit):
+class AlexNet(ModelUnit):
   def __init__(self, out_dim: int = 64, pretrained: bool = True, **kwargs):
     super(AlexNet, self).__init__()
     w = None if not pretrained else torchvision.models.AlexNet_Weights.DEFAULT
@@ -51,7 +52,7 @@ class AlexNet(SiameseModelUnit):
   def name(self):
     return f"AlexNet"
 
-class DenseNet(SiameseModelUnit):
+class DenseNet(ModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 121, pretrained: bool = True):
     super(DenseNet, self).__init__()
     ens = {
@@ -66,7 +67,7 @@ class DenseNet(SiameseModelUnit):
     ln: torch.nn.Linear = self.model.classifier
     self.model.classifier = torch.nn.Linear(ln.in_features, out_dim)
 
-class VGG(SiameseModelUnit):
+class VGG(ModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 11, pretrained: bool = True):
     super(VGG, self).__init__()
     ens = {
@@ -86,7 +87,7 @@ class VGG(SiameseModelUnit):
   def name(self):
     return f"VGG_{self.model_version}_32"
 
-class Vit(SiameseModelUnit):  # modelo poderoso e grande, aprende com muitos dados
+class Vit(ModelUnit):  # modelo poderoso e grande, aprende com muitos dados
   def __init__(self, out_dim: int = 64, model_version = "b", pretrained: bool = True):
     super(Vit, self).__init__()
     ens = {
@@ -121,7 +122,7 @@ class Vit(SiameseModelUnit):  # modelo poderoso e grande, aprende com muitos dad
   def name(self):
     return f"VIT_{self.model_version}_32"
 
-class CCT(SiameseModelUnit):  # modelo economico, aprende com menos dados
+class CCT(ModelUnit):  # modelo economico, aprende com menos dados
   def __init__(self, out_dim: int = 64, img_shape = (224, 224), model_version = 2, n_input_channels = 3):
     super(CCT, self).__init__()
     ccts = {
@@ -154,7 +155,7 @@ class CCT(SiameseModelUnit):  # modelo economico, aprende com menos dados
   def name(self):
     return "CCT_2"
 
-class EfficientNet(SiameseModelUnit):
+class EfficientNet(ModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 0, pretrained = True):
     super(EfficientNet, self).__init__()
     ens = {
@@ -186,7 +187,7 @@ class EfficientNet(SiameseModelUnit):
   def name(self):
     return f"efficient_net_b{self.model_version}"
 
-class EfficientNetV2(SiameseModelUnit):
+class EfficientNetV2(ModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 's', pretrained = True):
     super(EfficientNetV2, self).__init__()
     ens = {
@@ -215,7 +216,7 @@ class EfficientNetV2(SiameseModelUnit):
   def name(self):
     return f"efficient_net_b{self.model_version}"
 
-class MobileNetV3(SiameseModelUnit):
+class MobileNetV3(ModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 0, pretrained = True):
     super(MobileNetV3, self).__init__()
     ens = {
@@ -246,7 +247,7 @@ class MobileNetV3(SiameseModelUnit):
   def name(self):
     return f"MobileNetV3-{self.model_version}"
   
-class ResNet(SiameseModelUnit):
+class ResNet(ModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 18, pretrained = True):
     super(ResNet, self).__init__()
     ens = {
@@ -273,7 +274,7 @@ class ResNet(SiameseModelUnit):
   def name(self):
     return f"resnet{self.model_version}"
 
-class ConvNext(SiameseModelUnit):
+class ConvNext(ModelUnit):
   def __init__(self, out_dim: int = 64, model_version = 18, pretrained = True):
     super(ConvNext, self).__init__()
     ens = {
@@ -307,13 +308,17 @@ class ConvNext(SiameseModelUnit):
 
 
 class SiameseModel(torch.nn.Module):
+  """Transforms a regular model into a siamese network
+  """
   def __init__(self, model: torch.nn.Module):
     super(SiameseModel, self).__init__()
     self.model = model
 
-  def forward(self, x1, x2):
+  def forward(self, x1: torch.Tensor, x2: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     return self.model(x1), self.model(x2)
   
   @property
-  def name(self):
+  def name(self) -> str:
+    """Returns the original model's name
+    """
     return self.model.name

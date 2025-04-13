@@ -1,6 +1,6 @@
 from trainer import train
 from config import Config
-from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, SiameseModelUnit, DenseNet, AlexNet, VGG, EfficientNetV2, MobileNetV3, ConvNext
+from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, ModelUnit, DenseNet, AlexNet, VGG, EfficientNetV2, MobileNetV3, ConvNext
 from dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from log import Log
 from metrics import EER, LR, Identification
@@ -74,7 +74,7 @@ def main(config=None):
       "xm0u9xr6": (ConvNext, "ConvNext"),
     }
 
-    model: SiameseModelUnit
+    model: ModelUnit
     model, project_name = model_dict[wandb.run.sweep_id]
     model = model(out_dim=out_dim, model_version=model_version, pretrained=pre_trained)
 

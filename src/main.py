@@ -29,40 +29,50 @@ epochs = 80
 momentum = 0.9
 decay = 0
 
-def mkdir(folder):
+def mkdir(folder: os.PathLike):
+  """Creates a new folder. Catches the `FileExistsError` from `os.mkdir`.
+
+  Args:
+      folder (os.PathLike): new folder path
+  """
   try:
     os.mkdir(folder)
-  except FileExistsError as e:
-    print(e)
+  except FileExistsError:
+    pass
 
 project_name = f"vit_test"
 
-# model = CCT(out_dim=out_dim, img_shape=img_shape, model_version=model_version, n_input_channels=n_channels)
-# model = EfficientNet(out_dim, model_version=model_version)
+# choose a model from src/architecture
 model = Vit(out_dim=64, model_version="b", pretrained=True)
-# model = Vit(out_dim=64, model_version="b", pretrained=False)
+
+# if using imagenet pretrained weights, use (224, 224)
+# otherwise, use whatever you feel like
 img_shape = (model.im_shape, model.im_shape)
 model = SiameseModel(model)
 
-csv_path = f"./train_{split_mode}.csv"
+csv_path = f"./train_{split_mode}.csv"  # csv containg the train split for zsl or gzsl
 df = pd.read_csv(csv_path, index_col=0)
-# split_string = "split"
-# df = df.rename(columns={split_string: "train"})
-#gambiarra
+
+# test becomes 1, train becomes 0
+# gambiarra
 df.loc[df["split"] == split_number, "split"] = -1
 df.loc[df["split"] > 0, "split"] = 0
 df.loc[df["split"] == -1, "split"] = 1
 
+# load the eval protocol
 protocol_path = "./train_protocol.csv"
 protocol = pd.read_csv(protocol_path)
 protocol = protocol[(protocol["split_mode"] == f"{split_mode}_split") & (protocol["split_number"] == split_number)]
 
+# create file loaders
 train_loader = DocDataset(df, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels)
 val_loader = DocDataset(df, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
 
+# adapt loaders to a contrastive loader schema
 train_loader = ContrastivePairLoader(train_loader, None)
 val_loader = ContrastivePairLoader(val_loader, protocol)
 
+# uses torch dataloader class to create batches
 train_loader = DataLoader(train_loader, batch_size, shuffle=shuffle_loader)
 val_loader = DataLoader(val_loader, batch_size, shuffle=False)
 
@@ -72,6 +82,7 @@ optimizers = {
   "sgd": lambda: torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=decay)
 }
 
+# stores the current configuration. this serves as a log
 config = Config(
   batch_size=batch_size,
   criterion=ContrastiveLoss,

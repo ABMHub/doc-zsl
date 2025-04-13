@@ -11,6 +11,8 @@ from torch.utils.data import Dataset as TorchDataset
 from torch.utils.data import DataLoader as TorchDataLoader
 from torchvision.transforms import ToTensor
 
+from typing import Tuple
+
 class DataLoader(TorchDataLoader):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
@@ -23,6 +25,10 @@ class DatasetTemplate:
     pass
 
 class DocDataset(TorchDataset, DatasetTemplate):
+  """Class to load data from the dataset.
+  The `__getitem__` method returns an element and its class
+  Must be used with a ContrastiveLoader to train a document matching model
+  """
   def __init__(
     self,
     dataframe: pd.DataFrame,
@@ -33,6 +39,17 @@ class DocDataset(TorchDataset, DatasetTemplate):
     std: float = 0.1724,
     n_channels: int = 3
   ):
+    """_summary_
+
+    Args:
+        dataframe (pd.DataFrame): the dataframe containing the dataset
+        train (bool): true if train, false if test
+        img_shape (tuple, optional): image height and width. Defaults to (224, 224).
+        load_in_ram (bool, optional): if true, load the entire dataset in ram. Defaults to False, with lazy image load.
+        mean (float, optional): mean value of the dataset. Defaults to 0.9402.
+        std (float, optional): standard deviation of the dataset. Defaults to 0.1724.
+        n_channels (int, optional): number of channels (RGB or grayscale). Defaults to 3.
+    """
     super().__init__()
     self.df = dataframe[(dataframe["split"] == int(not train))]
     if train:
@@ -50,7 +67,18 @@ class DocDataset(TorchDataset, DatasetTemplate):
   def __len__(self):
     return len(self.df)
   
-  def process_image(self, file_path):
+  def process_image(self, file_path: os.PathLike) -> torch.Tensor:
+    """Preprocess image
+    - Resize to desired shape
+    - Convert to either RGB or grayscale
+    - Standardization following given mean and std
+
+    Args:
+        file_path (os.PathLike): path containing a image (png, jpg, tiff...)
+
+    Returns:
+        torch.Tensor: preprocessed image matrix
+    """
     im = Image.open(file_path)
     im : Image.Image
 
@@ -59,22 +87,36 @@ class DocDataset(TorchDataset, DatasetTemplate):
 
     return (ToTensor()(im) - self.mean) / self.std
 
-  def __getitem__(self, index):
+  def __getitem__(self, index: int) -> Tuple[torch.tensor, int]:
+    """Get `index` image and it's class number
+
+    Args:
+        index (int): the index on the dataframe
+
+    Returns:
+        Tuple[torch.tensor, int]: x and y
+    """
     row = self.df.iloc[index]
     path, class_number = row["doc_path"], row["class_number"]
+    # if the dataset is already in ram, just retrieve the data
     if self.ram:
       return self.processed_ds[index], class_number
-    # else
+    # otherwise, process the image
     return self.process_image(path), class_number
   
 class ContrastivePairLoader(TorchDataset, DatasetTemplate):
+  """Adapts a classification loader into a contrastive learning data loader
+  Fixes the pairs on the test set, while maintaining training random
+  """
   def __init__(self, dataset: DocDataset, protocol: pd.DataFrame = None):
     super(ContrastivePairLoader, self).__init__()
     self.dataset = dataset
     self.train = self.dataset.train
+    # if there is no protocol, randomly gather pair (probably train loader)
     if protocol is None:
       self.randomize_pairs()
 
+    # if there is a protocol, just load it
     else:
       self.prepare_protocol(protocol)
 
@@ -132,5 +174,6 @@ class ContrastivePairLoader(TorchDataset, DatasetTemplate):
     return (x1, x2), y
   
   def on_epoch_end(self):
+    # if this is a train loader, we want a new set of pairs every epoch
     if self.train:
       self.randomize_pairs()

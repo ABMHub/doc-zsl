@@ -4,6 +4,8 @@ from metrics import Metric, Loss
 from typing import Type
 
 class Log:
+  """Stores the logs of every step or epoch
+  """
   def __init__(self, minimize_loss = True, wandb_flag: bool = True, wandb_args: dict = None):
     self.train_metrics: dict[str, Metric] = dict()
     self.val_metrics: dict[str, Metric] = dict()
