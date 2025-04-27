@@ -1,14 +1,15 @@
-from trainer import train
-from config import Config
-from architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, ModelUnit, DenseNet, AlexNet, VGG, EfficientNetV2, MobileNetV3, ConvNext
-from dataloader import DocDataset, DataLoader, ContrastivePairLoader
-from log import Log
-from metrics import EER, LR, Identification
-from loss import ContrastiveLoss
+from internal.trainer import train
+from internal.config import Config
+from internal.architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, ModelUnit, DenseNet, AlexNet, VGG, EfficientNetV2, MobileNetV3, ConvNext
+from internal.dataloader import DocDataset, DataLoader, ContrastivePairLoader
+from internal.log import Log
+from internal.metrics import EER, LR, Identification
+from internal.loss import ContrastiveLoss
+from internal.callbacks import ModelCheckpoint
+
 import torch
 import wandb
 import math
-from callbacks import ModelCheckpoint
 import pandas as pd
 import gc
 import os

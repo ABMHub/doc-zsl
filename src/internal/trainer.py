@@ -1,19 +1,12 @@
-## Dependencies
-
-# import pytesseract
-# import torchmetrics
-from accelerate import Accelerator
-import numpy as np
 import torch
-import numpy as np
-import torch.nn.grad
 from tqdm.auto import tqdm
-from loss import ContrastiveLoss
-from log import Log
 import typing
-from callbacks import Callback
 from collections.abc import Callable
-from dataloader import DataLoader
+
+from internal.loss import ContrastiveLoss
+from internal.log import Log
+from internal.callbacks import Callback
+from internal.dataloader import DataLoader
 
 TRAIN, VAL = True, False
 
@@ -61,7 +54,7 @@ def train_epoch(epoch, data_loader, model, criterion, optimizer, device, log : L
     loss.backward()
 
     try:
-      torch.nn.utils.clip_grad_norm_(model.parameters(), 5, error_if_nonfinite=True)
+      torch.nn.utils.clip_grad_norm_(model.parameters(), 1, error_if_nonfinite=True)
     except RuntimeError:
       continue
 
@@ -118,7 +111,7 @@ def train(
     config,
     train_dataloader,
     val_dataloader,
-    model,
+    model: torch.nn.Module,
     device,
     log: Log,
     patience: int = None,

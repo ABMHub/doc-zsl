@@ -37,7 +37,8 @@ class DocDataset(TorchDataset, DatasetTemplate):
     load_in_ram : bool = False,
     mean: float = 0.9402,
     std: float = 0.1724,
-    n_channels: int = 3
+    n_channels: int = 3,
+    preprocessor=None
   ):
     """_summary_
 
@@ -59,6 +60,8 @@ class DocDataset(TorchDataset, DatasetTemplate):
     self.ram = load_in_ram
     self.mean, self.std = mean, std
     self.n_channels = n_channels
+    if preprocessor is not None:
+      self.process_image = lambda path: preprocessor(images=Image.open(path).convert("RGB"), return_tensors="pt")["pixel_values"][0]
     if self.ram:
       print("Preprocessing dataset")
       self.processed_ds = [self.process_image(self.df.iloc[i]["doc_path"]) for i in tqdm(range(len(self.df)))]

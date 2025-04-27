@@ -1,8 +1,10 @@
+import transformers
 import torch
-import torch.optim.sgd
 import torchvision
 from vit_pytorch import cct
 from typing import Tuple
+from transformers.optimization import get_cosine_schedule_with_warmup
+
 
 class ModelUnit(torch.nn.Module):
   def __init__(self):
@@ -39,6 +41,34 @@ class ModelUnit(torch.nn.Module):
             nn = nn*s
         pp += nn
     return pp
+
+class DiT(ModelUnit):
+  def __init__(self, out_dim: int = 64, model_version = None, pretrained: bool = True):
+    super().__init__()
+    self.model = transformers.BeitForImageClassification.from_pretrained("microsoft/dit-base", num_labels=out_dim)
+    # self.fc = torch.nn.Linear(768, out_dim)
+    self.learning_rate = 5e-4
+    self.warmup_epochs = 20
+    self.epochs = 200
+    self.weight_decay = 0.2
+    self.scheduler = get_cosine_schedule_with_warmup
+
+
+  @property
+  def optimizer(self):
+    return torch.optim.AdamW(
+      self.model.parameters(), 
+      self.learning_rate, 
+      weight_decay=self.weight_decay
+    )
+
+  @property
+  def name(self):
+    return "DiT"
+  
+  def forward(self, x):
+    return self.model.forward(x).logits
+
 
 class AlexNet(ModelUnit):
   def __init__(self, out_dim: int = 64, pretrained: bool = True, **kwargs):

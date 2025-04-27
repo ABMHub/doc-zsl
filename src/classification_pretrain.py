@@ -1,6 +1,6 @@
 from internal.trainer import train
 from internal.config import Config
-from internal.architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, DiT
+from internal.architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet
 from internal.dataloader import DocDataset, DataLoader, ContrastivePairLoader
 from internal.log import Log
 from internal.metrics import EER, LR, Identification
@@ -10,6 +10,9 @@ from internal.callbacks import ModelCheckpoint
 import torch
 import pandas as pd
 import os
+
+from datasets import load_dataset
+dataset = load_dataset("aharley/rvl_cdip")
 
 dataset = "rvl_zsl_5k"
 split_mode = "zsl"  # overlap, zsl, gzsl
@@ -41,25 +44,17 @@ def mkdir(folder: os.PathLike):
   except FileExistsError:
     pass
 
-project_name = f"dit_test"
+project_name = f"vit_test"
 
 # choose a model from src/architecture
-model = DiT(out_dim=64, model_version="b", pretrained=True)
-
-# hyperparameters are stored in each model's class
-learning_rate = model.learning_rate
-decay = model.weight_decay
-momentum = model.momentum
-optimizer = model.optimizer
-scheduler = model.scheduler
-lr_gamma = model.lr_gamma
+model = Vit(out_dim=64, model_version="b", pretrained=True)
 
 # if using imagenet pretrained weights, use (224, 224)
 # otherwise, use whatever you feel like
 img_shape = (model.im_shape, model.im_shape)
 model = SiameseModel(model)
 
-csv_path = f"./dataset/splits/train_{split_mode}.csv"  # csv containg the train split for zsl or gzsl
+csv_path = f"./train_{split_mode}.csv"  # csv containg the train split for zsl or gzsl
 df = pd.read_csv(csv_path, index_col=0)
 
 # test becomes 1, train becomes 0
@@ -69,17 +64,13 @@ df.loc[df["split"] > 0, "split"] = 0
 df.loc[df["split"] == -1, "split"] = 1
 
 # load the eval protocol
-protocol_path = "./dataset/protocols/val_protocol.csv"
+protocol_path = "./train_protocol.csv"
 protocol = pd.read_csv(protocol_path)
 protocol = protocol[(protocol["split_mode"] == f"{split_mode}_split") & (protocol["split_number"] == split_number)]
 
-import transformers
-
-processor = transformers.AutoImageProcessor.from_pretrained("microsoft/dit-base")
-
 # create file loaders
-train_loader = DocDataset(df, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels, preprocessor=processor)
-val_loader = DocDataset(df, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels, preprocessor=processor)
+train_loader = DocDataset(df, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels)
+val_loader = DocDataset(df, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
 
 # adapt loaders to a contrastive loader schema
 train_loader = ContrastivePairLoader(train_loader, None)
@@ -89,18 +80,24 @@ val_loader = ContrastivePairLoader(val_loader, protocol)
 train_loader = DataLoader(train_loader, batch_size, shuffle=shuffle_loader)
 val_loader = DataLoader(val_loader, batch_size, shuffle=False)
 
+optimizers = {
+  "adamw": lambda: torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=decay),
+  "adam": lambda: torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=decay),
+  "sgd": lambda: torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=decay)
+}
+
+# stores the current configuration. this serves as a log
 config = Config(
   batch_size=batch_size,
   criterion=ContrastiveLoss,
   model = model,
   shuffle_loader = True,
-  epochs=epochs,
-  scheduler=scheduler(optimizer, len(train_loader)*20, len(train_loader)*200),
-  # scheduler=(torch.optim.lr_scheduler.CosineAnnealingLR(), {"T_max": len(train_loader) * epochs}),
+  epochs=int(epochs),
+  scheduler=(torch.optim.lr_scheduler.CosineAnnealingLR, {"T_max": len(train_loader) * epochs}),
   learning_rate=learning_rate,
   img_width = img_shape[0],
   img_height = img_shape[1],
-  optimizer=optimizer,
+  optimizer=optimizers['adamw'](),
   momentum=momentum,
   decay=decay
 )
@@ -120,10 +117,11 @@ log.create_metric("lr", LR, True, scheduler=config.scheduler)
 
 # run_name = wandb.run.name
 
+
 models_folder = "trained_models"
 mkdir(models_folder)
 mkdir(f"./{models_folder}/{project_name}")
-mc = ModelCheckpoint(f"./{models_folder}/{project_name}/dit_test-2_best.pt")
+mc = ModelCheckpoint(f"./{models_folder}/{project_name}/vit1e-3_best.pt")
 
 train(
   config = config,
@@ -134,5 +132,5 @@ train(
   log = log,
   patience = patience,
   callbacks=[mc],
-  model_save_path=f"./{models_folder}/{project_name}/dit_test-2_last.pt"
+  model_save_path=f"./{models_folder}/{project_name}/vit1e-3_last.pt"
 )

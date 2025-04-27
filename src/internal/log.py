@@ -1,6 +1,6 @@
 import wandb
 import numpy as np
-from metrics import Metric, Loss
+from internal.metrics import Metric, Loss
 from typing import Type
 
 class Log:
