@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader as TorchDataLoader
 from torchvision.transforms import ToTensor
 
 from typing import Tuple
+from collections.abc import Callable
 
 class DataLoader(TorchDataLoader):
   def __init__(self, *args, **kwargs):
@@ -38,7 +39,7 @@ class DocDataset(TorchDataset, DatasetTemplate):
     mean: float = 0.9402,
     std: float = 0.1724,
     n_channels: int = 3,
-    preprocessor=None
+    preprocessor: Callable[[Image.Image], torch.Tensor] = None
   ):
     """_summary_
 
@@ -50,6 +51,7 @@ class DocDataset(TorchDataset, DatasetTemplate):
         mean (float, optional): mean value of the dataset. Defaults to 0.9402.
         std (float, optional): standard deviation of the dataset. Defaults to 0.1724.
         n_channels (int, optional): number of channels (RGB or grayscale). Defaults to 3.
+        preprocessor: a callable to overwrite the entire default preprocessing pipeline
     """
     super().__init__()
     self.df = dataframe[(dataframe["split"] == int(not train))]
@@ -123,7 +125,12 @@ class ContrastivePairLoader(TorchDataset, DatasetTemplate):
     else:
       self.prepare_protocol(protocol)
 
-  def prepare_protocol(self, protocol):
+  def prepare_protocol(self, protocol: pd.DataFrame) -> None:
+    """Converts the dataframe protocol into image pairs in the dataloader
+
+    Args:
+        protocol (pd.DataFrame): the testing protocol
+    """
     dic ={
       "x1": [self.dataset.df.index.get_loc(elem) for elem in protocol["file_a_idx"].values],
       "x2": [self.dataset.df.index.get_loc(elem) for elem in protocol["file_b_idx"].values],
@@ -131,9 +138,11 @@ class ContrastivePairLoader(TorchDataset, DatasetTemplate):
     }
 
     self.df = pd.DataFrame(dic)
-    1+1
 
-  def randomize_pairs(self):
+  def randomize_pairs(self) -> None:
+    """Create a random list of image pairs. Likely to be used in training.
+    """
+    # fixes the x1 image, and find random x2 images to close a pair for each element
     dic = {
       "x1": list(range(len(self.dataset))),
       "x2": [],
@@ -145,8 +154,8 @@ class ContrastivePairLoader(TorchDataset, DatasetTemplate):
     for i in range(len(self.dataset)):
       file_path = ds_df.iloc[i]["doc_path"]
       class_number = ds_df.iloc[i]["class_number"]
-      y = random.getrandbits(1)
-      op = operator.eq if y else operator.ne
+      y = random.getrandbits(1) # first, decides if y is 0 or 1
+      op = operator.eq if y else operator.ne # filter operator
 
       # se y == 1, escolhe um aleatorio da mesma classe
       # se y == 0, escolhe um aleatorio de outra classe
