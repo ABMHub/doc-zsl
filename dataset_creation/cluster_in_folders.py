@@ -5,8 +5,8 @@ import numpy as np
 import shutil
 import tqdm
 
-# sh_function = shutil.copy
-sh_function = shutil.move
+sh_function = shutil.copy
+# sh_function = shutil.move
 
 def move_or_copy(a, b):
     try:
@@ -14,9 +14,9 @@ def move_or_copy(a, b):
     except:
         pass
 
-clusters_folder = "clusters/" # pasta com os csvs
-images_folder = "/mnt/c/Users/lucas/Datasets/rvl-cdip" # pasta com as imagens
-clusters_dest_folder = "/mnt/c/Users/lucas/Datasets/rvl-cdip/clusters" # pasta destino
+clusters_csv = "/home/lucasabm/datasets/rvl-cdip/images/specification.csv" # pasta com os csvs
+images_folder = "/home/lucasabm/datasets/rvl-cdip/images/specification" # pasta com as imagens
+clusters_dest_folder = "/home/lucasabm/datasets/rvl-cdip/clusters/specification" # pasta destino
 
 def mkdir(folder):
     try:
@@ -26,44 +26,38 @@ def mkdir(folder):
 
 mkdir(clusters_dest_folder)
 
-for i, elem in tqdm.tqdm(enumerate(os.listdir(clusters_folder)), "CSVs"):
-    if i == 0: continue
-    class_path = os.path.join(clusters_dest_folder, str(i))
-    csv_path = os.path.join(clusters_folder, elem)
-    mkdir(class_path)
-    df = pd.read_csv(f"./clusters/distances_{i}.csv", index_col=0)
-    df_clusters = df["label"].unique()
-    cluster_rank = {"cluster": [], "mean_distance": [], "cluster_size": []}
+df = pd.read_csv(clusters_csv)
+df_clusters = df["cluster_index"].unique()
+cluster_rank = {"cluster": [], "mean_distance": [], "cluster_size": []}
 
-    for cluster in df_clusters:
-        cluster_elements = df[df["label"] == cluster]
-        arrays = [np.fromstring(elem[1:-1], sep=" ") for elem in list(cluster_elements["features"].values)]
-        md = np.mean(scipy.spatial.distance.cdist(arrays, arrays))
-        cluster_rank["mean_distance"].append(md)
-        cluster_rank['cluster'].append(cluster)
-        cluster_rank["cluster_size"].append(len(cluster_elements))
+for cluster in df_clusters:
+    cluster_elements = df[df["cluster_index"] == cluster]
+    arrays = [np.fromstring(elem[1:-1], sep=" ") for elem in list(cluster_elements["features"].values)]
+    md = np.mean(scipy.spatial.distance.cdist(arrays, arrays))
+    cluster_rank["mean_distance"].append(md)
+    cluster_rank['cluster'].append(cluster)
+    cluster_rank["cluster_size"].append(len(cluster_elements))
 
-    cluster_rank = pd.DataFrame(cluster_rank)
+cluster_rank = pd.DataFrame(cluster_rank)
 
-    for group, f in tqdm.tqdm([
-        ("entre 5 e 10", lambda x: (x > 5) & (x <= 10)),
-        ("entre 10 e 20", lambda x: (x > 10) & (x <= 20)),
-        ("mais de 20", lambda x: x > 20),
-        ("5 ou menos", lambda x: x <= 5),
-    ], 'group'):
-        group_folder = os.path.join(class_path, group)
-        mkdir(group_folder)
+for group, f in tqdm.tqdm([
+    ("entre 5 e 10", lambda x: (x > 5) & (x <= 10)),
+    ("entre 10 e 20", lambda x: (x > 10) & (x <= 20)),
+    ("mais de 20", lambda x: x > 20),
+    ("5 ou menos", lambda x: x <= 5),
+], 'group'):
+    group_folder = os.path.join(clusters_dest_folder, group)
+    mkdir(group_folder)
 
-        group_clusters = cluster_rank[f(cluster_rank["cluster_size"])]
-        ordered_clusters = group_clusters.sort_values(by=["mean_distance"])
+    group_clusters = cluster_rank[f(cluster_rank["cluster_size"])]
+    ordered_clusters = group_clusters.sort_values(by=["mean_distance"])
 
-        for j, row in tqdm.tqdm(enumerate(ordered_clusters.iloc), "cluster"):
-            cluster_index = row["cluster"]
-            cluster_elements = df[df["label"] == cluster_index]
+    for j, row in tqdm.tqdm(enumerate(ordered_clusters.iloc), "cluster"):
+        cluster_index = row["cluster"]
+        cluster_elements = df[df["cluster_index"] == cluster_index]
 
-            cluster_folder = os.path.join(group_folder, f"{str(j)} - c{cluster_index}")
-            mkdir(cluster_folder)
+        cluster_folder = os.path.join(group_folder, f"{str(j)} - c{cluster_index}")
+        mkdir(cluster_folder)
 
-            for file_id in cluster_elements["name"].values:
-                file_path = os.path.join(images_folder, file_id)
-                move_or_copy(file_path, cluster_folder)
+        for file_path in cluster_elements["file_name"].values:
+            move_or_copy(file_path, cluster_folder)

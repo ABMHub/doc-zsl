@@ -41,10 +41,10 @@ def mkdir(folder: os.PathLike):
   except FileExistsError:
     pass
 
-project_name = f"dit_test"
+project_name = f"resnet_cluster"
 
 # choose a model from src/architecture
-model = DiT(out_dim=64, model_version="b", pretrained=True)
+model = ResNet(out_dim=64, model_version=34, pretrained=True)
 
 # hyperparameters are stored in each model's class
 learning_rate = model.learning_rate
@@ -73,9 +73,10 @@ protocol_path = "./dataset/protocols/val_protocol.csv"
 protocol = pd.read_csv(protocol_path)
 protocol = protocol[(protocol["split_mode"] == f"{split_mode}_split") & (protocol["split_number"] == split_number)]
 
-import transformers
+# import transformers
 
-processor = transformers.AutoImageProcessor.from_pretrained("microsoft/dit-base")
+# processor = transformers.AutoImageProcessor.from_pretrained("microsoft/dit-base")
+processor = None
 
 # create file loaders
 train_loader = DocDataset(df, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels, preprocessor=processor)
@@ -95,7 +96,8 @@ config = Config(
   model = model,
   shuffle_loader = True,
   epochs=epochs,
-  scheduler=scheduler(optimizer, len(train_loader)*20, len(train_loader)*200),
+  # scheduler=scheduler(optimizer, len(train_loader)*20, len(train_loader)*200),
+  scheduler=scheduler(optimizer, len(train_loader)*epochs, lr_gamma),
   # scheduler=(torch.optim.lr_scheduler.CosineAnnealingLR(), {"T_max": len(train_loader) * epochs}),
   learning_rate=learning_rate,
   img_width = img_shape[0],
@@ -123,7 +125,7 @@ log.create_metric("lr", LR, True, scheduler=config.scheduler)
 models_folder = "trained_models"
 mkdir(models_folder)
 mkdir(f"./{models_folder}/{project_name}")
-mc = ModelCheckpoint(f"./{models_folder}/{project_name}/dit_test-2_best.pt")
+mc = ModelCheckpoint(f"./{models_folder}/{project_name}/resnet_cluster_best.pt")
 
 train(
   config = config,
@@ -134,5 +136,5 @@ train(
   log = log,
   patience = patience,
   callbacks=[mc],
-  model_save_path=f"./{models_folder}/{project_name}/dit_test-2_last.pt"
+  model_save_path=f"./{models_folder}/{project_name}/resnet_cluster_last.pt"
 )

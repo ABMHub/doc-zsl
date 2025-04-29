@@ -3,7 +3,7 @@
 # para a pasta raiz. Deleta as pastas vazias
 #
 
-folder = "/mnt/c/Users/lucas/Datasets/rvl-cdip"
+folder = "/home/lucasabm/datasets/rvl-cdip/images"
 
 import os
 import shutil
@@ -24,6 +24,7 @@ def flatten(root_folder, current_folder):
             try: # pode ocorrer erro no move por arquivo repetido
                 shutil.move(elem_path, root_folder)
             except: 
+                # os.remove(elem_path) # vão sobrar arquivos e pastas. pode ser util deletar quando der erro.
                 print(f"erro no arquivo {elem_path}")
 
 flatten(folder, folder)
