@@ -49,7 +49,7 @@ def move_or_copy(a, b):
 
 def mkdir(folder):
     try:
-        os.mkdir(folder)
+        os.makedirs(folder, exist_ok=True)
     except FileExistsError as e:
         print(e)
 
