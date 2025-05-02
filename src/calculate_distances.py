@@ -9,10 +9,37 @@ import torch
 import numpy as np
 import pandas as pd
 import tqdm
+import argparse
 
-model_path = "./trained_models/resnet_cluster/resnet_cluster_best.pt"
-dataset_path = "/home/lucasabm/datasets/rvl-cdip/images/specification"
-cuda = True
+from absl import app
+from absl.flags import argparse_flags
+
+
+def parse_args(argv):
+    parser = argparse_flags.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        help="Pretrained model (Resnet).",
+        default="./trained_models/resnet_cluster/resnet_cluster_best.pt",
+    )
+    parser.add_argument(
+        "--dataset_path",
+        type=str,
+        help="Path to a subset of rvl-cdip dataset.",
+        default="/home/lucasabm/datasets/rvl-cdip/images/specification",
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        help="Device used by Pytorch computation.",
+        default="cuda",
+    )
+    args = parser.parse_args(argv[1:])
+    return args
+
 
 # from dataloader.py
 def process_image(
@@ -40,29 +67,39 @@ def process_image(
 
     return (ToTensor()(im) - mean) / std
 
-cuda = "cuda" if cuda else "cpu"
 
-model: SiameseModel = torch.load(model_path, cuda)
-model = model.model
+def main(args):
+    device = "cuda" if args.device == "cuda" else "cpu"
 
-data_list_path = os.listdir(dataset_path)
-data_list_path = [os.path.join(dataset_path, elem) for elem in data_list_path]
+    model: SiameseModel = torch.load(args.model_path, device)
+    model = model.model
 
-d = {
-    'file_name': [],
-    'features': [],
-}
+    data_list_path = os.listdir(args.dataset_path)
+    data_list_path = [
+        os.path.join(args.dataset_path, elem) for elem in data_list_path
+    ]
 
-for elem in tqdm.tqdm(data_list_path):
-    tensor = process_image(elem)
-    batch = tensor.unsqueeze(0) # pura preguiça sinceramente
-    batch = batch.to(cuda)
-    feature_space: np.ndarray = model(batch)[0].detach().cpu().numpy()
+    d = {
+        "file_name": [],
+        "features": [],
+    }
 
-    d["features"].append(feature_space.tolist())
-    d["file_name"].append(elem)
+    for elem in tqdm.tqdm(data_list_path):
+        tensor = process_image(elem)
+        batch = tensor.unsqueeze(0)  # pura preguiça sinceramente
+        batch = batch.to(device)
+        feature_space: np.ndarray = model(batch)[0].detach().cpu().numpy()
 
-class_name = dataset_path.split("/")[-1]
+        d["features"].append(feature_space.tolist())
+        d["file_name"].append(elem)
 
-df = pd.DataFrame(d)
-df.to_csv(os.path.join(dataset_path, '..', f"{class_name}.csv"), index=False)
+    class_name = args.dataset_path.split("/")[-1]
+
+    df = pd.DataFrame(d)
+    df.to_csv(
+        os.path.join(args.dataset_path, "..", f"{class_name}.csv"), index=False
+    )
+
+
+if __name__ == "__main__":
+    app.run(main, flags_parser=parse_args)

@@ -1,0 +1,10 @@
+# Create via `micromamba create -f environment.yml`
+# Update via `micromamba update -f environment.yml`
+name: doc-zsl
+channels:
+    - conda-forge
+dependencies:
+    - python==3.10
+    - gcc==13.2.0
+    - pip:
+        - -r requirements.txt
