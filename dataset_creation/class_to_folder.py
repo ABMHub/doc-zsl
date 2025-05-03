@@ -38,13 +38,13 @@ def parse_args(argv):
         "--labels_path",
         type=str,
         help="Train.txt, test.txt, and val.txt from rvl-cdip dataset.",
-        default="/home/lucasabm/datasets/rvl-cdip/labels",
+        default="~/datasets/rvl-cdip/labels",
     )
     parser.add_argument(
         "--images_path",
         type=str,
         help="Path directories of rvl-cdip dataset.",
-        default="/home/lucasabm/datasets/rvl-cdip/images",
+        default="~/datasets/rvl-cdip/images",
     )
     args = parser.parse_args(argv[1:])
     return args

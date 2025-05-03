@@ -23,13 +23,13 @@ def parse_args(argv):
         "--model_path",
         type=str,
         help="Pretrained model (Resnet).",
-        default="./trained_models/resnet_cluster/resnet_cluster_best.pt",
+        default="./dataset_creation/resnet_cluster_best.pt",
     )
     parser.add_argument(
         "--dataset_path",
         type=str,
         help="Path to a subset of rvl-cdip dataset.",
-        default="/home/lucasabm/datasets/rvl-cdip/images/specification",
+        default="~/datasets/rvl-cdip/images/specification",
     )
     parser.add_argument(
         "--device",
@@ -86,7 +86,7 @@ def main(args):
 
     for elem in tqdm.tqdm(data_list_path):
         tensor = process_image(elem)
-        batch = tensor.unsqueeze(0)  # pura preguiça sinceramente
+        batch = tensor.unsqueeze(0)  # should be a proper batch
         batch = batch.to(device)
         feature_space: np.ndarray = model(batch)[0].detach().cpu().numpy()
 

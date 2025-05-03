@@ -17,20 +17,14 @@ def parse_args(argv):
     parser.add_argument(
         "--clusters_csv",
         type=str,
-        help="Directory which contains the distance csvs.",
-        default="/home/lucasabm/datasets/rvl-cdip/images/specification.csv",
-    )
-    parser.add_argument(
-        "--images_folder",
-        type=str,
-        help="Path to the rvl-cdip images.",
-        default="/home/lucasabm/datasets/rvl-cdip/images/specification",
+        help="Directory which contains the clusters csvs.",
+        default="~/datasets/rvl-cdip/images/specification_clusters.csv",
     )
     parser.add_argument(
         "--clusters_dest_folder",
         type=str,
         help="Output directory with results",
-        default="/home/lucasabm/datasets/rvl-cdip/clusters/specification",
+        default="~/datasets/rvl-cdip/clusters/specification",
     )
     args = parser.parse_args(argv[1:])
     return args
@@ -38,7 +32,6 @@ def parse_args(argv):
 
 sh_function = shutil.copy
 # sh_function = shutil.move
-
 
 def move_or_copy(a, b):
     try:
@@ -76,10 +69,10 @@ def main(args):
 
     for group, f in tqdm.tqdm(
         [
-            ("entre 5 e 10", lambda x: (x > 5) & (x <= 10)),
-            ("entre 10 e 20", lambda x: (x > 10) & (x <= 20)),
-            ("mais de 20", lambda x: x > 20),
-            ("5 ou menos", lambda x: x <= 5),
+            ("between 5 and 10", lambda x: (x > 5) & (x <= 10)),
+            ("between 10 and 20", lambda x: (x > 10) & (x <= 20)),
+            ("more than 20", lambda x: x > 20),
+            ("5 or less", lambda x: x <= 5),
         ],
         "group",
     ):
