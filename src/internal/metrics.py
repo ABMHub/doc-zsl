@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 class Metric:
-  def __init__(self, name, minimize = True, train = True):
+  def __init__(self, name, minimize = True, train = True, **kwargs):
     self.minimize = minimize
     self.name = name
     self.current_epoch = []
@@ -45,6 +45,14 @@ class Metric:
   def euclidian_distance(x1, x2):
     return np.linalg.norm(x1-x2)
 
+  @staticmethod
+  def cosine_distance(x1, x2):
+    dot_product = np.dot(x1, x2)
+    norm_x1 = np.linalg.norm(x1)
+    norm_x2 = np.linalg.norm(x2)
+    cosine_similarity = dot_product / (norm_x1 * norm_x2)
+    return 1 - cosine_similarity
+
 class Loss(Metric):
   def __init__(self, **kwargs):
     super().__init__("loss", **kwargs)
@@ -57,6 +65,11 @@ class EER(Metric):
     super().__init__("eer", **kwargs)
     self.dists_pred = []
     self.y = []
+    if ("cosine" in kwargs.keys()) and kwargs["cosine"]:
+      self.dist = self.cosine_distance
+
+    else:
+      self.dist = self.euclidian_distance
 
   def end_epoch(self):
     self.dists_pred = []
@@ -67,7 +80,7 @@ class EER(Metric):
     if not self.train:
       y_pred = self.batches_to_list(y_pred)
 
-    y_pred = [self.euclidian_distance(*elem) for elem in list(zip(*y_pred))]
+    y_pred = [self.dist(*elem) for elem in list(zip(*y_pred))]
 
     self.dists_pred += y_pred
     self.y += list(y_true)

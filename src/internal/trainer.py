@@ -117,6 +117,7 @@ def train(
     patience: int = None,
     callbacks: typing.List[Callback] = [],
     model_save_path: str = None,
+    distance_metric: str = None
   ):
   ea = EarlyStopping(patience)
 
@@ -125,13 +126,15 @@ def train(
   scheduler = config.scheduler
   model.to(device)
 
+  loss_f = ContrastiveLoss(margin=1, cosine_distance=distance_metric=="cosine")
+
   try:
     for i in range(epochs):
       train_epoch(
         epoch=i,
         data_loader=train_dataloader,
         model=model,
-        criterion=ContrastiveLoss,
+        criterion=loss_f,
         optimizer=optimizer,
         device=device,
         log=log,
@@ -142,7 +145,7 @@ def train(
         epoch=i,
         data_loader=val_dataloader,
         model=model,
-        criterion=ContrastiveLoss,
+        criterion=loss_f,
         device=device,
         log=log
       )

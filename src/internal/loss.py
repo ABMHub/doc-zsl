@@ -1,23 +1,21 @@
 import torch
 
-# def ContrastiveLoss(x1, x2, label, margin: float = 1.0):
-#     """
-#     Computes Contrastive Loss
-#     """
-
-#     dist = torch.nn.functional.pairwise_distance(x1, x2)
-
-#     loss = (1 - label) * torch.pow(dist, 2) \
-#         + (label) * torch.pow(torch.clamp(margin - dist, min=0.0), 2)
-#     loss = torch.mean(loss)
-
-#     return loss
-
 def EuclidianDistance(x1, x2):
     return (x1-x2).pow(2).sum(1).sqrt()
 
-def ContrastiveLoss(x1, x2, target, margin: float = 1.0):
-    eps = 1e-8
-    distances = EuclidianDistance(x1, x2)
-    losses = target.float() * distances.pow(2) + (1 + -1 * target).float() * torch.nn.functional.relu(margin - (distances + eps)).pow(2)
-    return losses.mean()
+def CosineDistance(x1, x2):
+    return 1 - torch.nn.functional.cosine_similarity(x1, x2, dim=1)
+
+class ContrastiveLoss:
+    def __init__(self, margin: float = 1.0, cosine_distance: bool = False):
+        self.margin = margin
+        self.distance_f = CosineDistance if cosine_distance else EuclidianDistance
+    
+    def __call__(self, x1, x2, target):
+        eps = 1e-8
+
+        distances = self.distance_f(x1, x2)
+        pos = target.float() * distances.pow(2)
+        neg = (1 + -1 * target).float() * torch.nn.functional.relu(self.margin - (distances + eps)).pow(2)
+        losses = pos + neg
+        return losses.mean()

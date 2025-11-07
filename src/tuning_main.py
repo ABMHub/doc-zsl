@@ -21,19 +21,20 @@ metric = {
 
 parameters_dict = {
   "pre_trained":        {"value": True},
-  "out_dim":            {'value': 64},
+  "out_dim":            {'values': [16, 32, 64, 128, 256]},
   "batch_size":         {"value": 16},
   'epochs':             {"value": 90},
   'n_channels':         {"value": 3},
   'patience':           {"value": 1e5},
   "scheduler_step":     {"value": 90},
 
-  "aaa_model_version":  {"values": ["tiny", "small", "base", "large"]},
-  "split_mode":         {"values": ["zsl", "gzsl"]},
-  "split_number":       {"values": list(range(5))}
+  "aaa_model_version":  {"values": [18, 34, 50, 101, 152]},
+  "distance_metric":    {"values": ["euclidian", "cosine"]},
+  "split_mode":         {"values": ["zsl"]},
+  "split_number":       {"values": [0]}
 }
 
-project_name = "ConvNext"
+project_name = "ResNet"
 
 sweep_config = {
   'method': 'grid',
@@ -61,10 +62,11 @@ def main(config=None):
     split_number = int(wdb_config.split_number)
     split_mode = str(wdb_config.split_mode)
     epochs = int(wdb_config.epochs)
+    distance_metric = wdb_config.distance_metric
     scheduler_step = wdb_config.scheduler_step
 
     model_dict = {
-      "ak55hy5u": (ResNet, "ResNet T2"),
+      "flu7j5tx": (ResNet, "ResNet"),
       "d2cfk3o7": (Vit, "ViT"),
       "k151sfrd": (DenseNet, "DenseNet"),
       "3yzu0li3": (AlexNet, "AlexNet"),
@@ -94,7 +96,7 @@ def main(config=None):
     img_shape = (model.im_shape, model.im_shape)
     model = SiameseModel(model)
 
-    csv_path = f"./train_{split_mode}.csv"
+    csv_path = f"./dataset/splits/train_{split_mode}.csv"
     df = pd.read_csv(csv_path, index_col=0)
     # split_string = "split"
     # df = df.rename(columns={split_string: "train"})
@@ -103,7 +105,7 @@ def main(config=None):
     df.loc[df["split"] > 0, "split"] = 0
     df.loc[df["split"] == -1, "split"] = 1
 
-    protocol_path = "./train_protocol.csv"
+    protocol_path = "./dataset/protocols/val_protocol.csv"
     protocol = pd.read_csv(protocol_path)
     protocol = protocol[(protocol["split_mode"] == f"{split_mode}_split") & (protocol["split_number"] == split_number)]
 
@@ -140,8 +142,8 @@ def main(config=None):
     # }
 
     log = Log(wandb_flag=True)
-    log.create_metric("eer", EER, True)
-    log.create_metric("eer", EER, False)
+    log.create_metric("eer", EER, True, cosine=distance_metric=="cosine")
+    log.create_metric("eer", EER, False, cosine=distance_metric=="cosine")
     log.create_metric("lr", LR, True, scheduler=config.scheduler)
     # log.create_metric("ident", Identification, False)
 
@@ -161,22 +163,15 @@ def main(config=None):
       log = log,
       patience = patience,
       callbacks=[mc],
-      model_save_path=f"./{models_folder}/{project_name}/{run_name}_last.pt"
+      model_save_path=f"./{models_folder}/{project_name}/{run_name}_last.pt",
+      distance_metric=distance_metric
     )
 
     torch.cuda.empty_cache()
     gc.collect()
 
-# sweep_id = wandb.sweep(sweep_config, project="icdar-experiments")
+# sweep_id = wandb.sweep(sweep_config, project="defesa-mestrado")
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-# wandb.agent("k151sfrd", function=main, count=None, project="icdar-experiments") # densenet
-# wandb.agent("3yzu0li3", function=main, count=None, project="icdar-experiments") # Alexnet
-# wandb.agent("ak55hy5u", function=main, count=None, project="icdar-experiments") # resnet t2
-# wandb.agent("vo5zn89m", function=main, count=None, project="icdar-experiments") # vgg
-# wandb.agent("l2jrbgze", function=main, count=None, project="icdar-experiments") # mobilenet v3
-# wandb.agent("emb7e2fs", function=main, count=None, project="icdar-experiments") # efficientnet v2
-# wandb.agent("nbxz2o7j", function=main, count=None, project="icdar-experiments") # efficientnet
-# wandb.agent("d2cfk3o7", function=main, count=None, project="icdar-experiments") # vit
-wandb.agent("xm0u9xr6", function=main, count=None, project="icdar-experiments") # convnext
+wandb.agent("flu7j5tx", function=main, count=None, project="defesa-mestrado")
