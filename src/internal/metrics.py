@@ -52,6 +52,9 @@ class Metric:
     norm_x2 = np.linalg.norm(x2)
     cosine_similarity = dot_product / (norm_x1 * norm_x2)
     return 1 - cosine_similarity
+  
+  def compute_metric(self, **kwargs):
+    return None
 
 class Loss(Metric):
   def __init__(self, **kwargs):
@@ -76,27 +79,37 @@ class EER(Metric):
     self.y = []
     super().end_epoch()
 
-  def add_data(self, y_true, y_pred, **kwargs):
+  def add_data(self, y_true, y_pred, store_values = True, **kwargs):
     if not self.train:
       y_pred = self.batches_to_list(y_pred)
 
     y_pred = [self.dist(*elem) for elem in list(zip(*y_pred))]
 
-    self.dists_pred += y_pred
-    self.y += list(y_true)
+    dists_pred = self.dists_pred + y_pred
+    y = self.y + list(y_true)
 
-    batch_eer, _ = self.calculate_eer()
-    self.current_epoch = [batch_eer] # pra resolver o np.mean
+    batch_eer, _ = self.calculate_eer(y, dists_pred)
+
+    if store_values:
+      self.dists_pred = dists_pred
+      self.y = y
+      self.current_epoch = [batch_eer]
 
     return batch_eer
 
-  def calculate_eer(self) -> tuple[float, float]:
-    fpr, tpr, threshold = roc_curve(self.y, self.dists_pred, pos_label=0)
+  def calculate_eer(self, y = None, dists_pred = None) -> tuple[float, float]:
+    y = y or self.y
+    dists_pred = dists_pred or self.dists_pred
+    fpr, tpr, threshold = roc_curve(y, dists_pred, pos_label=0)
     fnr = 1 - tpr
     eer_threshold = threshold[np.nanargmin(np.absolute((fnr - fpr)))]
     eer = fpr[np.nanargmin(np.absolute((fnr - fpr)))]
 
     return eer, eer_threshold
+  
+  def compute_metric(self, y_true, y_pred, **kwargs):
+    resp = self.add_data(y_true, y_pred, store_values=False)
+    return resp
 
 class LR(Metric):
   def __init__(self, scheduler, **kwargs):

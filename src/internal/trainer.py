@@ -2,6 +2,7 @@ import torch
 from tqdm.auto import tqdm
 import typing
 from collections.abc import Callable
+import numpy as np
 
 from internal.loss import ContrastiveLoss
 from internal.log import Log
@@ -106,6 +107,45 @@ def val_epoch(
 
   print(f"Val epoch {epoch}")
   pretty_print_dict(log.create_metrics_dict(VAL))
+
+def test_epoch(
+    data_loader: DataLoader,
+    model: torch.nn.Module,
+    criterion: Callable,
+    device: str,
+    log: Log
+  ):
+  model.eval()
+  y_pred_batch = []
+  y_true = []
+  test_loss = []
+
+  with torch.no_grad():
+    loop = tqdm(data_loader, total=len(data_loader), leave=False)
+    for batch in loop:
+      (x1, x2), y = batch
+      x1 = x1.to(device)
+      x2 = x2.to(device)
+      x = (x1, x2)
+      y = y.to(device)
+
+      # process
+      outputs = model(*x)
+      out_cpu = [elem.detach().cpu().numpy() for elem in outputs]
+
+      y_pred_batch.append(out_cpu)
+      y_true += y.detach().cpu().numpy().tolist()
+
+      loss = criterion(*outputs, y)
+      test_loss.append(loss.detach().cpu())
+
+  metrics = log.compute_all_metrics(y_true=y_true, y_pred=y_pred_batch, df=data_loader.dataset.dataset.df)
+  metrics["loss"] = np.mean(test_loss)
+
+  print("Test epoch done")
+  pretty_print_dict(metrics)
+
+  return metrics
 
 def train(
     config,

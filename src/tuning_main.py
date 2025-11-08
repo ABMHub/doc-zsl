@@ -1,4 +1,4 @@
-from internal.trainer import train
+from internal.trainer import train, test_epoch
 from internal.config import Config
 from internal.architecture import Vit, SiameseModel, CCT, EfficientNet, ResNet, ModelUnit, DenseNet, AlexNet, VGG, EfficientNetV2, MobileNetV3, ConvNext
 from internal.dataloader import DocDataset, DataLoader, ContrastivePairLoader
@@ -26,7 +26,7 @@ parameters_dict = {
   'epochs':             {"value": 90},
   'n_channels':         {"value": 3},
   'patience':           {"value": 1e5},
-  "scheduler_step":     {"value": 90},
+  "scheduler_step":     {"value": 30},
 
   "aaa_model_version":  {"values": [18, 34, 50, 101, 152]},
   "distance_metric":    {"values": ["euclidian", "cosine"]},
@@ -51,7 +51,7 @@ def mkdir(folder):
     print(e)
 
 def main(config=None):
-  with wandb.init(config=config):
+  with wandb.init(config=config) as run:
     wdb_config = wandb.config
     out_dim = int(wdb_config.out_dim)
     batch_size = int(wdb_config.batch_size)
@@ -66,7 +66,7 @@ def main(config=None):
     scheduler_step = wdb_config.scheduler_step
 
     model_dict = {
-      "flu7j5tx": (ResNet, "ResNet"),
+      "i7po2o08": (ResNet, "ResNet T2"),
       "d2cfk3o7": (Vit, "ViT"),
       "k151sfrd": (DenseNet, "DenseNet"),
       "3yzu0li3": (AlexNet, "AlexNet"),
@@ -109,14 +109,24 @@ def main(config=None):
     protocol = pd.read_csv(protocol_path)
     protocol = protocol[(protocol["split_mode"] == f"{split_mode}_split") & (protocol["split_number"] == split_number)]
 
+    test_csv_path = f"./dataset/splits/test_{split_mode}.csv"
+    test_df = pd.read_csv(test_csv_path, index_col=0)
+    test_df.insert(len(test_df.columns), "split", 1)
+    test_protocol_path = "./dataset/protocols/test_protocol.csv"
+    test_protocol = pd.read_csv(test_protocol_path)
+    test_protocol = test_protocol[(test_protocol["split_mode"] == f"{split_mode}_split")]
+
     train_loader = DocDataset(df, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels)
     val_loader = DocDataset(df, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
+    test_loader = DocDataset(test_df, train=False, load_in_ram=False, img_shape=img_shape, n_channels=n_channels, mean=train_loader.mean, std=train_loader.std)
 
     train_loader = ContrastivePairLoader(train_loader, None)
     val_loader = ContrastivePairLoader(val_loader, protocol)
+    test_loader = ContrastivePairLoader(test_loader, test_protocol)
 
     train_loader = DataLoader(train_loader, batch_size, shuffle=shuffle_loader)
     val_loader = DataLoader(val_loader, batch_size, shuffle=False)
+    test_loader = DataLoader(test_loader, batch_size, shuffle=False)
 
     config = Config(
       batch_size=batch_size,
@@ -141,7 +151,11 @@ def main(config=None):
     #   "config": config.config_dict()
     # }
 
-    log = Log(wandb_flag=True)
+    log = Log(
+      minimize_loss=False,
+      wandb_flag=True,
+      wandb_args=None,
+    )
     log.create_metric("eer", EER, True, cosine=distance_metric=="cosine")
     log.create_metric("eer", EER, False, cosine=distance_metric=="cosine")
     log.create_metric("lr", LR, True, scheduler=config.scheduler)
@@ -167,11 +181,40 @@ def main(config=None):
       distance_metric=distance_metric
     )
 
+    test_last_scores = test_epoch(
+      test_loader, 
+      model, 
+      ContrastiveLoss(margin=1, cosine_distance=distance_metric=="cosine"),
+      "cuda",
+      log
+    )
+
     torch.cuda.empty_cache()
     gc.collect()
+
+    model = torch.load(f"./{models_folder}/{project_name}/{run_name}_best.pt")
+
+    test_best_scores = test_epoch(
+      test_loader, 
+      model, 
+      ContrastiveLoss(margin=1, cosine_distance=distance_metric=="cosine"),
+      "cuda",
+      log
+    )
+
+    for key in list(test_last_scores.keys()):
+      test_last_scores["last-last" + key] = test_last_scores.pop(key)
+
+    for key in list(test_best_scores.keys()):
+      test_best_scores["best-test" + key] = test_best_scores.pop(key)
+
+    test_last_scores.update(test_best_scores)
+    run.summary.update(test_last_scores)
+
 
 # sweep_id = wandb.sweep(sweep_config, project="defesa-mestrado")
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("flu7j5tx", function=main, count=None, project="defesa-mestrado")
+# wandb.agent("flu7j5tx", function=main, count=None, project="defesa-mestrado")
+wandb.agent("i7po2o08", function=main, count=None, project="defesa-mestrado")
