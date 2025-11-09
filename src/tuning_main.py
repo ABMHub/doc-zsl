@@ -28,13 +28,13 @@ parameters_dict = {
   'patience':           {"value": 1e5},
   "scheduler_step":     {"value": 30},
 
-  "aaa_model_version":  {"values": [18, 34, 50, 101, 152]},
+  "aaa_model_version":  {"values": ['b', 'l']},
   "distance_metric":    {"values": ["euclidian", "cosine"]},
   "split_mode":         {"values": ["zsl"]},
   "split_number":       {"values": [0]}
 }
 
-project_name = "ResNet"
+project_name = "ViT"
 
 sweep_config = {
   'method': 'grid',
@@ -67,14 +67,14 @@ def main(config=None):
 
     model_dict = {
       "i7po2o08": (ResNet, "ResNet T2"),
-      "d2cfk3o7": (Vit, "ViT"),
-      "k151sfrd": (DenseNet, "DenseNet"),
-      "3yzu0li3": (AlexNet, "AlexNet"),
-      "vo5zn89m": (VGG, "VGG"),
-      "emb7e2fs": (EfficientNetV2, "EfficientNetV2"),
-      "l2jrbgze": (MobileNetV3, "MobileNetV3"),
-      "nbxz2o7j": (EfficientNet, "EfficientNet"),
-      "xm0u9xr6": (ConvNext, "ConvNext"),
+      "ur9z0s0w": (AlexNet, "AlexNet"),
+      "6182miqq": (Vit, "ViT"),
+      # "k151sfrd": (DenseNet, "DenseNet"),
+      # "vo5zn89m": (VGG, "VGG"),
+      # "emb7e2fs": (EfficientNetV2, "EfficientNetV2"),
+      # "l2jrbgze": (MobileNetV3, "MobileNetV3"),
+      # "nbxz2o7j": (EfficientNet, "EfficientNet"),
+      # "xm0u9xr6": (ConvNext, "ConvNext"),
     }
 
     model: ModelUnit
@@ -216,5 +216,6 @@ def main(config=None):
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-# wandb.agent("flu7j5tx", function=main, count=None, project="defesa-mestrado")
-wandb.agent("i7po2o08", function=main, count=None, project="defesa-mestrado")
+# wandb.agent("i7po2o08", function=main, count=None, project="defesa-mestrado") # resnet
+# wandb.agent("ur9z0s0w", function=main, count=None, project="defesa-mestrado") # alexnet
+wandb.agent("6182miqq", function=main, count=None, project="defesa-mestrado") # vit
