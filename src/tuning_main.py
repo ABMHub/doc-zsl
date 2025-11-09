@@ -68,7 +68,7 @@ def main(config=None):
     model_dict = {
       "i7po2o08": (ResNet, "ResNet T2"),
       "ur9z0s0w": (AlexNet, "AlexNet"),
-      "6182miqq": (Vit, "ViT"),
+      "ezexg7tm": (Vit, "ViT"),
       # "k151sfrd": (DenseNet, "DenseNet"),
       # "vo5zn89m": (VGG, "VGG"),
       # "emb7e2fs": (EfficientNetV2, "EfficientNetV2"),
@@ -218,4 +218,4 @@ def main(config=None):
 # wandb.agent(sweep_id, function=main, count=None)
 # wandb.agent("i7po2o08", function=main, count=None, project="defesa-mestrado") # resnet
 # wandb.agent("ur9z0s0w", function=main, count=None, project="defesa-mestrado") # alexnet
-wandb.agent("6182miqq", function=main, count=None, project="defesa-mestrado") # vit
+wandb.agent("ezexg7tm", function=main, count=None, project="defesa-mestrado") # vit
