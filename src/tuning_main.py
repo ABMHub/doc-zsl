@@ -13,36 +13,7 @@ import math
 import pandas as pd
 import gc
 import os
-
-metric = {
-  'name': 'val-loss',
-  'goal': 'minimize'
-}
-
-parameters_dict = {
-  "pre_trained":        {"value": True},
-  "out_dim":            {'values': [16, 32, 64, 128, 256]},
-  "batch_size":         {"value": 16},
-  'epochs':             {"value": 90},
-  'n_channels':         {"value": 3},
-  'patience':           {"value": 1e5},
-  "scheduler_step":     {"value": 30},
-
-  "aaa_model_version":  {"values": ['b', 'l']},
-  "distance_metric":    {"values": ["euclidian", "cosine"]},
-  "split_mode":         {"values": ["zsl"]},
-  "split_number":       {"values": [0]}
-}
-
-project_name = "ViT"
-
-sweep_config = {
-  'method': 'grid',
-  'metric': metric,
-  "name": project_name,
-  # "name": f"EfficientNet_b{model_version}_torchvision",
-  "parameters": parameters_dict
-}
+import json
 
 def mkdir(folder):
   try:
@@ -67,14 +38,14 @@ def main(config=None):
 
     model_dict = {
       "i7po2o08": (ResNet, "ResNet T2"),
+      "fovpkr1a": (ResNet, "ResNet 512"),
       "ur9z0s0w": (AlexNet, "AlexNet"),
+      "28w1flxs": (AlexNet, "AlexNet 512"),
       "ezexg7tm": (Vit, "ViT"),
-      # "k151sfrd": (DenseNet, "DenseNet"),
-      # "vo5zn89m": (VGG, "VGG"),
-      # "emb7e2fs": (EfficientNetV2, "EfficientNetV2"),
-      # "l2jrbgze": (MobileNetV3, "MobileNetV3"),
-      # "nbxz2o7j": (EfficientNet, "EfficientNet"),
-      # "xm0u9xr6": (ConvNext, "ConvNext"),
+      "z2sl3ctn": (Vit, "ViT 512"),
+      "b5jgnxma": (EfficientNet, "EfficientNet"),
+      "qdyxxs2q": (MobileNetV3, "MobileNet"),
+      "tc3u5buc": (VGG, "VGG"),
     }
 
     model: ModelUnit
@@ -211,11 +182,35 @@ def main(config=None):
     test_last_scores.update(test_best_scores)
     run.summary.update(test_last_scores)
 
+# metric = {
+#   'name': 'val-loss',
+#   'goal': 'minimize'
+# }
+
+# with open("./parameters_sweep/tuning/vgg.json", "r") as f:
+#   parameters_dict = json.load(f)
+
+# project_name = "VGG"
+
+# sweep_config = {
+#   'method': 'grid',
+#   'metric': metric,
+#   "name": project_name,
+#   # "name": f"EfficientNet_b{model_version}_torchvision",
+#   "parameters": parameters_dict
+# }
 
 # sweep_id = wandb.sweep(sweep_config, project="defesa-mestrado")
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-# wandb.agent("i7po2o08", function=main, count=None, project="defesa-mestrado") # resnet
+wandb.agent("z2sl3ctn", function=main, count=None, project="defesa-mestrado") # vit 512
+wandb.agent("i7po2o08", function=main, count=None, project="defesa-mestrado") # resnet
+wandb.agent("fovpkr1a", function=main, count=None, project="defesa-mestrado") # resnet 512
+wandb.agent("tc3u5buc", function=main, count=None, project="defesa-mestrado") # vgg
+wandb.agent("b5jgnxma", function=main, count=None, project="defesa-mestrado") # efficientnet
+wandb.agent("qdyxxs2q", function=main, count=None, project="defesa-mestrado") # mobilenet
+
+# wandb.agent("ezexg7tm", function=main, count=None, project="defesa-mestrado") # vit
+# wandb.agent("28w1flxs", function=main, count=None, project="defesa-mestrado") # alexnet 512
 # wandb.agent("ur9z0s0w", function=main, count=None, project="defesa-mestrado") # alexnet
-wandb.agent("ezexg7tm", function=main, count=None, project="defesa-mestrado") # vit
