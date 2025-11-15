@@ -21,6 +21,12 @@ def parse_args(argv):
         default="~/datasets/rvl-cdip/images/specification_clusters.csv",
     )
     parser.add_argument(
+        "--dataset_path",
+        type=str,
+        help="Path to the RVL-CDIP images dataset",
+        default='~/datasets/rvl-cdip/images/'
+    )
+    parser.add_argument(
         "--clusters_dest_folder",
         type=str,
         help="Output directory with results",
@@ -84,6 +90,7 @@ def main(args):
 
         for j, row in tqdm.tqdm(enumerate(ordered_clusters.iloc), "cluster"):
             cluster_index = row["cluster"]
+            if cluster_index == -1: continue
             cluster_elements = df[df["cluster_index"] == cluster_index]
 
             cluster_folder = os.path.join(
@@ -92,7 +99,8 @@ def main(args):
             mkdir(cluster_folder)
 
             for file_path in cluster_elements["file_name"].values:
-                move_or_copy(file_path, cluster_folder)
+                complete_file_path = os.path.join(args.dataset_path, file_path)
+                move_or_copy(complete_file_path, cluster_folder)
 
 
 if __name__ == "__main__":
