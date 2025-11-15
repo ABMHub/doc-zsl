@@ -182,35 +182,35 @@ def main(config=None):
     test_last_scores.update(test_best_scores)
     run.summary.update(test_last_scores)
 
-# metric = {
-#   'name': 'val-loss',
-#   'goal': 'minimize'
-# }
+metric = {
+  'name': 'val-loss',
+  'goal': 'minimize'
+}
 
-# with open("./parameters_sweep/tuning/vgg.json", "r") as f:
-#   parameters_dict = json.load(f)
+with open("./parameters_sweep/tuning/vgg.json", "r") as f:
+  parameters_dict = json.load(f)
 
-# project_name = "VGG"
+project_name = "VGG"
 
-# sweep_config = {
-#   'method': 'grid',
-#   'metric': metric,
-#   "name": project_name,
-#   # "name": f"EfficientNet_b{model_version}_torchvision",
-#   "parameters": parameters_dict
-# }
+sweep_config = {
+  'method': 'grid',
+  'metric': metric,
+  "name": project_name,
+  # "name": f"EfficientNet_b{model_version}_torchvision",
+  "parameters": parameters_dict
+}
 
 # sweep_id = wandb.sweep(sweep_config, project="defesa-mestrado")
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("z2sl3ctn", function=main, count=None, project="defesa-mestrado") # vit 512
-wandb.agent("i7po2o08", function=main, count=None, project="defesa-mestrado") # resnet
-wandb.agent("fovpkr1a", function=main, count=None, project="defesa-mestrado") # resnet 512
-wandb.agent("tc3u5buc", function=main, count=None, project="defesa-mestrado") # vgg
-wandb.agent("b5jgnxma", function=main, count=None, project="defesa-mestrado") # efficientnet
 wandb.agent("qdyxxs2q", function=main, count=None, project="defesa-mestrado") # mobilenet
+wandb.agent("b5jgnxma", function=main, count=None, project="defesa-mestrado") # efficientnet
+# wandb.agent("tc3u5buc", function=main, count=None, project="defesa-mestrado") # vgg
 
+# wandb.agent("i7po2o08", function=main, count=None, project="defesa-mestrado") # resnet
+# wandb.agent("z2sl3ctn", function=main, count=None, project="defesa-mestrado") # vit 512
+# wandb.agent("fovpkr1a", function=main, count=None, project="defesa-mestrado") # resnet 512
 # wandb.agent("ezexg7tm", function=main, count=None, project="defesa-mestrado") # vit
 # wandb.agent("28w1flxs", function=main, count=None, project="defesa-mestrado") # alexnet 512
 # wandb.agent("ur9z0s0w", function=main, count=None, project="defesa-mestrado") # alexnet

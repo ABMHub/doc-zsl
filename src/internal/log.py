@@ -24,7 +24,7 @@ class Log:
     self.current_epoch = 0
 
     if self.wandb_flag and self.wandb_run is None:
-      wandb.init(**wandb_args)
+      self.wandb_run = wandb.init(**wandb_args)
 
   def create_metric(self, name, metric: Type[Metric], train = True, **kwargs):
     obj = metric(train=train, **kwargs)
