@@ -39,15 +39,12 @@ def main(config=None):
     scheduler_step = wdb_config.scheduler_step
 
     model_dict = {
-      "i7po2o08": (ResNet, "ResNet T2"),
-      "fovpkr1a": (ResNet, "ResNet 512"),
-      "ur9z0s0w": (AlexNet, "AlexNet"),
-      "28w1flxs": (AlexNet, "AlexNet 512"),
-      "ezexg7tm": (Vit, "ViT"),
-      "z2sl3ctn": (Vit, "ViT 512"),
-      "b5jgnxma": (EfficientNet, "EfficientNet"),
-      "qdyxxs2q": (MobileNetV3, "MobileNet"),
-      "defzi2vw": (VGG, "VGG"),
+      "kygkqkc4": (AlexNet, "AlexNet"),
+      "2zp1vg5m": (EfficientNet, "EfficientNet"),
+      "ekp8tnd0": (MobileNetV3, "MobileNet"),
+      "ej4ix4jk": (ResNet, "ResNet"),
+      "wdyskv1e": (Vit, "ViT"),
+      "0vulcckv": (VGG, "VGG"),
     }
 
     model: ModelUnit
@@ -199,10 +196,10 @@ metric = {
   'goal': 'minimize'
 }
 
-with open("./parameters_sweep/tuning/vgg.json", "r") as f:
+with open("./parameters_sweep/tuning/vit.json", "r") as f:
   parameters_dict = json.load(f)
 
-project_name = "VGG"
+project_name = "ViT"
 
 sweep_config = {
   'method': 'grid',
@@ -212,17 +209,13 @@ sweep_config = {
   "parameters": parameters_dict
 }
 
-# sweep_id = wandb.sweep(sweep_config, project="defesa-mestrado")
+# sweep_id = wandb.sweep(sweep_config, project="tuning-mestrado")
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-# wandb.agent("qdyxxs2q", function=main, count=None, project="defesa-mestrado") # mobil:enet
-# wandb.agent("b5jgnxma", function=main, count=None, project="defesa-mestrado") # effici:entnet
-wandb.agent("defzi2vw", function=main, count=None, project="defesa-mestrado") # vgg
-
-# wandb.agent("i7po2o08", function=main, count=None, project="defesa-mestrado") # resnet
-# wandb.agent("z2sl3ctn", function=main, count=None, project="defesa-mestrado") # vit 512
-# wandb.agent("fovpkr1a", function=main, count=None, project="defesa-mestrado") # resnet 512
-# wandb.agent("ezexg7tm", function=main, count=None, project="defesa-mestrado") # vit
-# wandb.agent("28w1flxs", function=main, count=None, project="defesa-mestrado") # alexnet 512
-# wandb.agent("ur9z0s0w", function=main, count=None, project="defesa-mestrado") # alexnet
+wandb.agent("ej4ix4jk", function=main, count=None, project="tuning-mestrado") # ResNet
+wandb.agent("2zp1vg5m", function=main, count=None, project="tuning-mestrado") # EfficientNet
+wandb.agent("wdyskv1e", function=main, count=None, project="tuning-mestrado") # ViT
+wandb.agent("0vulcckv", function=main, count=None, project="tuning-mestrado") # VGG
+wandb.agent("ekp8tnd0", function=main, count=None, project="tuning-mestrado") # MobileNet
+wandb.agent("kygkqkc4", function=main, count=None, project="tuning-mestrado") # AlexNet
