@@ -15,6 +15,8 @@ import gc
 import os
 import json
 
+from dotenv import load_dotenv
+
 def mkdir(folder):
   try:
     os.mkdir(folder)
@@ -45,7 +47,7 @@ def main(config=None):
       "z2sl3ctn": (Vit, "ViT 512"),
       "b5jgnxma": (EfficientNet, "EfficientNet"),
       "qdyxxs2q": (MobileNetV3, "MobileNet"),
-      "tc3u5buc": (VGG, "VGG"),
+      "defzi2vw": (VGG, "VGG"),
     }
 
     model: ModelUnit
@@ -67,7 +69,7 @@ def main(config=None):
     img_shape = (model.im_shape, model.im_shape)
     model = SiameseModel(model)
 
-    csv_path = f"./dataset/splits/train_{split_mode}.csv"
+    csv_path = f"./dataset/active_labeling/loop4/splits/train_{split_mode}_loop4.csv"
     df = pd.read_csv(csv_path, index_col=0)
     # split_string = "split"
     # df = df.rename(columns={split_string: "train"})
@@ -76,16 +78,26 @@ def main(config=None):
     df.loc[df["split"] > 0, "split"] = 0
     df.loc[df["split"] == -1, "split"] = 1
 
-    protocol_path = "./dataset/protocols/val_protocol.csv"
+    protocol_path = "./dataset/active_labeling/loop4/protocols/val_protocol_loop4.csv"
     protocol = pd.read_csv(protocol_path)
     protocol = protocol[(protocol["split_mode"] == f"{split_mode}_split") & (protocol["split_number"] == split_number)]
 
-    test_csv_path = f"./dataset/splits/test_{split_mode}.csv"
+    test_csv_path = f"./dataset/active_labeling/loop4/splits/test_{split_mode}_loop4.csv"
     test_df = pd.read_csv(test_csv_path, index_col=0)
     test_df.insert(len(test_df.columns), "split", 1)
-    test_protocol_path = "./dataset/protocols/test_protocol.csv"
+    test_protocol_path = "./dataset/active_labeling/loop4/protocols/test_protocol_loop4.csv"
     test_protocol = pd.read_csv(test_protocol_path)
     test_protocol = test_protocol[(test_protocol["split_mode"] == f"{split_mode}_split")]
+
+    load_dotenv()
+    dataset_path = os.getenv("DATASET_PATH", "./")
+    def process_doc_path(row: pd.DataFrame):
+      path = row["doc_path"]
+      c = row["class_name"]
+      return os.path.join(dataset_path, c, os.path.basename(path))
+
+    df["doc_path"] = df.apply(process_doc_path, axis=1)
+    test_df["doc_path"] = test_df.apply(process_doc_path, axis=1)
 
     train_loader = DocDataset(df, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels)
     val_loader = DocDataset(df, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
@@ -204,9 +216,9 @@ sweep_config = {
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("qdyxxs2q", function=main, count=None, project="defesa-mestrado") # mobilenet
-wandb.agent("b5jgnxma", function=main, count=None, project="defesa-mestrado") # efficientnet
-# wandb.agent("tc3u5buc", function=main, count=None, project="defesa-mestrado") # vgg
+# wandb.agent("qdyxxs2q", function=main, count=None, project="defesa-mestrado") # mobil:enet
+# wandb.agent("b5jgnxma", function=main, count=None, project="defesa-mestrado") # effici:entnet
+wandb.agent("defzi2vw", function=main, count=None, project="defesa-mestrado") # vgg
 
 # wandb.agent("i7po2o08", function=main, count=None, project="defesa-mestrado") # resnet
 # wandb.agent("z2sl3ctn", function=main, count=None, project="defesa-mestrado") # vit 512

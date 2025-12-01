@@ -36,6 +36,7 @@ def main(args):
         df.drop(column_name, axis=1, inplace=True)
     df.insert(2, "cluster_index", labels)
     df.to_csv(args.clusters_dest_csv, index=False)
+    print("Done", args.dists_csv)
 
 if __name__ == "__main__":
     app.run(main, flags_parser=parse_args)
