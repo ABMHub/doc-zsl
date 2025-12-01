@@ -146,7 +146,7 @@ def main(config=None):
 
     run_name = wandb.run.name
 
-    models_folder = "trained_models"
+    models_folder = os.getenv("MODELS_PATH", "trained_models")
     mkdir(models_folder)
     mkdir(f"./{models_folder}/{project_name}")
     mc = ModelCheckpoint(f"./{models_folder}/{project_name}/{run_name}_best.pt")
