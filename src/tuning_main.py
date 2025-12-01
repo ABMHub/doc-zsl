@@ -213,8 +213,8 @@ sweep_config = {
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("2zp1vg5m", function=main, count=None, project="tuning-mestrado") # EfficientNet
 wandb.agent("ej4ix4jk", function=main, count=None, project="tuning-mestrado") # ResNet
+wandb.agent("2zp1vg5m", function=main, count=None, project="tuning-mestrado") # EfficientNet
 wandb.agent("wdyskv1e", function=main, count=None, project="tuning-mestrado") # ViT
 wandb.agent("0vulcckv", function=main, count=None, project="tuning-mestrado") # VGG
 wandb.agent("ekp8tnd0", function=main, count=None, project="tuning-mestrado") # MobileNet
