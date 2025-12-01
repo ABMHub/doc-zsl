@@ -143,10 +143,10 @@ def main(config=None):
 
     run_name = wandb.run.name
 
-    models_folder = os.getenv("MODELS_PATH", "trained_models")
+    models_folder = os.getenv("MODELS_PATH", "./trained_models")
     mkdir(models_folder)
-    mkdir(f"./{models_folder}/{project_name}")
-    mc = ModelCheckpoint(f"./{models_folder}/{project_name}/{run_name}_best.pt")
+    mkdir(f"{models_folder}/{project_name}")
+    mc = ModelCheckpoint(f"{models_folder}/{project_name}/{run_name}_best.pt")
 
     train(
       config = config,
@@ -157,7 +157,7 @@ def main(config=None):
       log = log,
       patience = patience,
       callbacks=[mc],
-      model_save_path=f"./{models_folder}/{project_name}/{run_name}_last.pt",
+      model_save_path=f"{models_folder}/{project_name}/{run_name}_last.pt",
       distance_metric=distance_metric
     )
 
@@ -172,7 +172,7 @@ def main(config=None):
     torch.cuda.empty_cache()
     gc.collect()
 
-    model = torch.load(f"./{models_folder}/{project_name}/{run_name}_best.pt")
+    model = torch.load(f"{models_folder}/{project_name}/{run_name}_best.pt")
 
     test_best_scores = test_epoch(
       test_loader, 
@@ -213,8 +213,8 @@ sweep_config = {
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("ej4ix4jk", function=main, count=None, project="tuning-mestrado") # ResNet
 wandb.agent("2zp1vg5m", function=main, count=None, project="tuning-mestrado") # EfficientNet
+wandb.agent("ej4ix4jk", function=main, count=None, project="tuning-mestrado") # ResNet
 wandb.agent("wdyskv1e", function=main, count=None, project="tuning-mestrado") # ViT
 wandb.agent("0vulcckv", function=main, count=None, project="tuning-mestrado") # VGG
 wandb.agent("ekp8tnd0", function=main, count=None, project="tuning-mestrado") # MobileNet
