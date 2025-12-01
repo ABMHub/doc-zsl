@@ -140,38 +140,55 @@ class ContrastivePairLoader(TorchDataset, DatasetTemplate):
     self.df = pd.DataFrame(dic)
 
   def randomize_pairs(self) -> None:
-    """Create a random list of image pairs. Likely to be used in training.
-    """
-    # fixes the x1 image, and find random x2 images to close a pair for each element
-    dic = {
-      "x1": list(range(len(self.dataset))),
-      "x2": [],
-      "y": []
-    }
-
-    ds_df = self.dataset.df
-
-    for i in range(len(self.dataset)):
-      file_path = ds_df.iloc[i]["doc_path"]
-      class_number = ds_df.iloc[i]["class_number"]
-      y = random.getrandbits(1) # first, decides if y is 0 or 1
-      op = operator.eq if y else operator.ne # filter operator
-
-      # se y == 1, escolhe um aleatorio da mesma classe
-      # se y == 0, escolhe um aleatorio de outra classe
-      data_filter = op(ds_df["class_number"], class_number)
-      data_filter = data_filter & (ds_df["doc_path"] != file_path)
-      filtered_data = ds_df[data_filter]
-      if len(filtered_data) < 1:
-        data_filter = (ds_df["class_number"] != class_number) & (ds_df["doc_path"] != file_path)
-        filtered_data = ds_df[data_filter]
-
-      index = filtered_data.sample(n=1).index[0]
-
-      dic["x2"].append(index)
-      dic["y"].append(y)
-
-    self.df = pd.DataFrame(dic)
+      """Create a random list of image pairs. Likely to be used in training.
+      """
+      ds_df = self.dataset.df
+      n_samples = len(self.dataset)
+      
+      # Pre-compute class groupings
+      class_to_indices = {}
+      for idx, class_num in enumerate(ds_df["class_number"]):
+          if class_num not in class_to_indices:
+              class_to_indices[class_num] = []
+          class_to_indices[class_num].append(idx)
+      
+      # Convert to numpy arrays for faster access
+      classes = ds_df["class_number"].values
+      all_classes = list(class_to_indices.keys())
+      
+      x1_list = list(range(n_samples))
+      x2_list = []
+      y_list = []
+      
+      for i in range(n_samples):
+          current_class = classes[i]
+          y = random.getrandbits(1)
+          
+          if y == 1:  # Same class
+              same_class_indices = class_to_indices[current_class]
+              # Filter out the current index
+              candidates = [idx for idx in same_class_indices if idx != i]
+              
+              if len(candidates) < 1:
+                  # Fallback: choose different class
+                  other_classes = [c for c in all_classes if c != current_class]
+                  chosen_class = random.choice(other_classes)
+                  candidates = class_to_indices[chosen_class]
+              
+              x2_idx = random.choice(candidates)
+          else:  # Different class
+              other_classes = [c for c in all_classes if c != current_class]
+              chosen_class = random.choice(other_classes)
+              x2_idx = random.choice(class_to_indices[chosen_class])
+          
+          x2_list.append(x2_idx)
+          y_list.append(y)
+      
+      self.df = pd.DataFrame({
+          "x1": x1_list,
+          "x2": x2_list,
+          "y": y_list
+      })
 
   def __len__(self):
     return len(self.df)

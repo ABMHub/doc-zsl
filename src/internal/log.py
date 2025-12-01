@@ -2,6 +2,7 @@ import wandb
 import numpy as np
 from internal.metrics import Metric, Loss
 from typing import Type
+import threading
 
 class Log:
   """Stores the logs of every step or epoch
@@ -103,4 +104,5 @@ class Log:
   def update_wandb(self):
     complete_log = self.create_complete_metrics_dict()
 
-    wandb.log(complete_log)
+    save_thread = threading.Thread(target=wandb.log, args=(complete_log,))
+    save_thread.start()

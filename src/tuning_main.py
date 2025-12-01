@@ -146,7 +146,9 @@ def main(config=None):
     models_folder = os.getenv("MODELS_PATH", "./trained_models")
     mkdir(models_folder)
     mkdir(f"{models_folder}/{project_name}")
-    mc = ModelCheckpoint(f"{models_folder}/{project_name}/{run_name}_best.pt")
+    mc_best = f"{models_folder}/{project_name}/{run_name}_best.pt"
+    mc_last = f"{models_folder}/{project_name}/{run_name}_last.pt"
+    mc = ModelCheckpoint(mc_last, mc_best)
 
     train(
       config = config,
@@ -157,7 +159,6 @@ def main(config=None):
       log = log,
       patience = patience,
       callbacks=[mc],
-      model_save_path=f"{models_folder}/{project_name}/{run_name}_last.pt",
       distance_metric=distance_metric
     )
 

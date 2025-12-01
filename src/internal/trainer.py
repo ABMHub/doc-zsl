@@ -156,7 +156,6 @@ def train(
     log: Log,
     patience: int = None,
     callbacks: typing.List[Callback] = [],
-    model_save_path: str = None,
     distance_metric: str = None
   ):
   ea = EarlyStopping(patience)
@@ -216,8 +215,3 @@ def train(
   except KeyboardInterrupt:
     print("Salvando modelo antes de encerrar...")
     raise
-
-  finally:
-    if model_save_path is not None:
-      torch.save(model, model_save_path)
-      print("Modelo salvo.")
