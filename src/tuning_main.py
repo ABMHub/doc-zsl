@@ -97,7 +97,7 @@ def main(config=None):
     test_df["doc_path"] = test_df.apply(process_doc_path, axis=1)
 
     train_loader = DocDataset(df, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels)
-    val_loader = DocDataset(df, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
+    val_loader = DocDataset(df, train=False, load_in_ram=False, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
     test_loader = DocDataset(test_df, train=False, load_in_ram=False, img_shape=img_shape, n_channels=n_channels, mean=train_loader.mean, std=train_loader.std)
 
     train_loader = ContrastivePairLoader(train_loader, None)
