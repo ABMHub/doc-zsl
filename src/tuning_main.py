@@ -197,10 +197,10 @@ metric = {
   'goal': 'minimize'
 }
 
-with open("./parameters_sweep/tuning/vit.json", "r") as f:
+with open("./parameters_sweep/final/vgg_zsl.json", "r") as f:
   parameters_dict = json.load(f)
 
-project_name = "ViT"
+project_name = "VGG ZSL"
 
 sweep_config = {
   'method': 'grid',
@@ -210,13 +210,19 @@ sweep_config = {
   "parameters": parameters_dict
 }
 
-# sweep_id = wandb.sweep(sweep_config, project="tuning-mestrado")
+# sweep_id = wandb.sweep(sweep_config, project="final-mestrado")
 # exit()
 
 # wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("2zp1vg5m", function=main, count=None, project="tuning-mestrado") # EfficientNet
-wandb.agent("ej4ix4jk", function=main, count=None, project="tuning-mestrado") # ResNet
-wandb.agent("wdyskv1e", function=main, count=None, project="tuning-mestrado") # ViT
-wandb.agent("0vulcckv", function=main, count=None, project="tuning-mestrado") # VGG
-wandb.agent("ekp8tnd0", function=main, count=None, project="tuning-mestrado") # MobileNet
-wandb.agent("kygkqkc4", function=main, count=None, project="tuning-mestrado") # AlexNet
+wandb.agent("hbqfwigd", function=main, count=None, project="final-mestrado") # ViT ZSL
+wandb.agent("7x3d1w38", function=main, count=None, project="final-mestrado") # ViT GZSL
+wandb.agent("vujckf5s", function=main, count=None, project="final-mestrado") # VGG ZSL
+wandb.agent("nro55npm", function=main, count=None, project="final-mestrado") # VGG GZSL
+wandb.agent("gqxuzy8l", function=main, count=None, project="final-mestrado") # AlexNet ZSL
+wandb.agent("7lf8d44y", function=main, count=None, project="final-mestrado") # AlexNet GZSL
+wandb.agent("skz8o7cb", function=main, count=None, project="final-mestrado") # EfficientNet ZSL
+wandb.agent("e78xp1o1", function=main, count=None, project="final-mestrado") # EfficientNet GZSL
+wandb.agent("gmn8ws0e", function=main, count=None, project="final-mestrado") # ResNet ZSL
+wandb.agent("3cqnqwwd", function=main, count=None, project="final-mestrado") # ResNet GZSL
+wandb.agent("cjbq57tk", function=main, count=None, project="final-mestrado") # MobileNet ZSL
+wandb.agent("q6rp6xhd", function=main, count=None, project="final-mestrado") # MobileNet GZSL
