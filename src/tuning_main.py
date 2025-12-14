@@ -39,12 +39,18 @@ def main(config=None):
     scheduler_step = wdb_config.scheduler_step
 
     model_dict = {
-      "kygkqkc4": (AlexNet, "AlexNet"),
-      "2zp1vg5m": (EfficientNet, "EfficientNet"),
-      "ekp8tnd0": (MobileNetV3, "MobileNet"),
-      "ej4ix4jk": (ResNet, "ResNet"),
-      "wdyskv1e": (Vit, "ViT"),
-      "0vulcckv": (VGG, "VGG"),
+      "gqxuzy8l": (AlexNet, "AlexNet"),
+      "7lf8d44y": (AlexNet, "AlexNet"),
+      "skz8o7cb": (EfficientNet, "EfficientNet"),
+      "e78xp1o1": (EfficientNet, "EfficientNet"),
+      "cjbq57tk": (MobileNetV3, "MobileNet"),
+      "q6rp6xhd": (MobileNetV3, "MobileNet"),
+      "gmn8ws0e": (ResNet, "ResNet"),
+      "3cqnqwwd": (ResNet, "ResNet"),
+      "hbqfwigd": (Vit, "ViT"),
+      "7x3d1w38": (Vit, "ViT"),
+      "vujckf5s": (VGG, "VGG"),
+      "nro55npm": (VGG, "VGG"),
     }
 
     model: ModelUnit
