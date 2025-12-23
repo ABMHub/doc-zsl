@@ -8,7 +8,7 @@
   "scheduler_step":     {"value": 30},
   "aaa_model_version":  {"value": 34},
   "distance_metric":    {"value": "cosine"},
-  "split_mode":         {"value": "zsl"},
+  "split_mode":         {"value": "gzsl"},
 
   "split_number":       {"values": [0, 1, 2, 3, 4]}
 }
