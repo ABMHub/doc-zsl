@@ -37,6 +37,12 @@ def parse_args(argv):
         help="Device used by Pytorch computation.",
         default="cuda",
     )
+    parser.add_argument(
+        "--output_path",
+        type=str,
+        help="Path to save the generated csv.",
+        default="None",
+    )
     args = parser.parse_args(argv[1:])
     return args
 
@@ -96,9 +102,15 @@ def main(args):
     class_name = args.dataset_path.split("/")[-1]
 
     df = pd.DataFrame(d)
-    df.to_csv(
-        os.path.join(args.dataset_path, "..", f"{class_name}.csv"), index=False
-    )
+
+    if args.output_path == None:
+        df.to_csv(
+            os.path.join(args.dataset_path, "..", f"{class_name}.csv"), index=False
+        )
+    else:
+        df.to_csv(
+            os.path.join(args.output_path, f"{class_name}.csv"), index=False
+        )
 
 
 if __name__ == "__main__":
