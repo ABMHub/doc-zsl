@@ -38,10 +38,10 @@ def parse_args(argv):
         default="cuda",
     )
     parser.add_argument(
-        "--output_path",
+        "--output_file",
         type=str,
-        help="Path to save the generated csv.",
-        default="None",
+        help="File to save the generated csv.",
+        default=None,
     )
     args = parser.parse_args(argv[1:])
     return args
@@ -103,13 +103,13 @@ def main(args):
 
     df = pd.DataFrame(d)
 
-    if args.output_path == None:
+    if args.output_file == None:
         df.to_csv(
             os.path.join(args.dataset_path, "..", f"{class_name}.csv"), index=False
         )
     else:
         df.to_csv(
-            os.path.join(args.output_path, f"{class_name}.csv"), index=False
+            args.output_file, index=False
         )
 
 
