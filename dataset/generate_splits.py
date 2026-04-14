@@ -4,8 +4,8 @@ import pandas as pd
 
 train_frac, val_frac = 0.8, 0.2
 
-dataset_path = "separacao-rvl_cdip"
-csv_dest_path = "./"
+dataset_path = "/home/lucasabm/datasets/la-cdip-4"
+csv_dest_path = "./dataset/active_labeling/loop4"
 
 dic = {
     "class_name": [],
@@ -81,4 +81,4 @@ df.insert(len(df.columns), "gzsl_split", gzsl_split)
 
 # end
 df = df.sort_index()
-df.to_csv("./splits.csv", index=False)
+df.to_csv(os.path.join(csv_dest_path, "./splits_loop4.csv"), index=False)

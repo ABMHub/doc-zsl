@@ -1,0 +1,13 @@
+{
+  "pre_trained":        {"value": true},
+  "out_dim":            {"value": 128},
+  "batch_size":         {"value": 16},
+  "epochs":             {"value": 90},
+  "n_channels":         {"value": 3},
+  "patience":           {"value": 1e5},
+  "distance_metric":    {"value": "euclidian"},
+  "scheduler_step":     {"value": 30},
+  "aaa_model_version":  {"value": 34},
+  "split_mode":         {"value": "zsl"},
+  "split_number":       {"value": 0}
+}

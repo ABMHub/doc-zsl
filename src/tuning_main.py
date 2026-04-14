@@ -39,18 +39,12 @@ def main(config=None):
     scheduler_step = wdb_config.scheduler_step
 
     model_dict = {
-      "gqxuzy8l": (AlexNet, "AlexNet"),
-      "7lf8d44y": (AlexNet, "AlexNet"),
-      "skz8o7cb": (EfficientNet, "EfficientNet"),
-      "e78xp1o1": (EfficientNet, "EfficientNet"),
-      "cjbq57tk": (MobileNetV3, "MobileNet"),
-      "q6rp6xhd": (MobileNetV3, "MobileNet"),
-      "gmn8ws0e": (ResNet, "ResNet"),
-      "n20dujws": (ResNet, "ResNet"),
-      "hbqfwigd": (Vit, "ViT"),
-      "7x3d1w38": (Vit, "ViT"),
-      "vujckf5s": (VGG, "VGG"),
-      "nro55npm": (VGG, "VGG"),
+      # "7lf8d44y": (AlexNet, "AlexNet"),
+      # "e78xp1o1": (EfficientNet, "EfficientNet"),
+      # "q6rp6xhd": (MobileNetV3, "MobileNet"),
+      "o2ctlezk": (ResNet, "ResNet"),
+      # "7x3d1w38": (Vit, "ViT"),
+      # "nro55npm": (VGG, "VGG"),
     }
 
     model: ModelUnit
@@ -203,10 +197,10 @@ metric = {
   'goal': 'minimize'
 }
 
-with open("./parameters_sweep/final/resnet_gzsl.json", "r") as f:
+with open("./parameters_sweep/final/loop.json", "r") as f:
   parameters_dict = json.load(f)
 
-project_name = "ResNet GZSL v2"
+project_name = "ResNet Loop 5"
 
 sweep_config = {
   'method': 'grid',
@@ -219,16 +213,4 @@ sweep_config = {
 # sweep_id = wandb.sweep(sweep_config, project="final-mestrado")
 # exit()
 
-# wandb.agent(sweep_id, function=main, count=None)
-wandb.agent("n20dujws", function=main, count=None, project="final-mestrado") # ResNet GZSL
-# wandb.agent("gqxuzy8l", function=main, count=None, project="final-mestrado") # AlexNet ZSL
-# wandb.agent("7lf8d44y", function=main, count=None, project="final-mestrado") # AlexNet GZSL
-# wandb.agent("skz8o7cb", function=main, count=None, project="final-mestrado") # EfficientNet ZSL
-# wandb.agent("e78xp1o1", function=main, count=None, project="final-mestrado") # EfficientNet GZSL
-# wandb.agent("gmn8ws0e", function=main, count=None, project="final-mestrado") # ResNet ZSL
-# wandb.agent("hbqfwigd", function=main, count=None, project="final-mestrado") # ViT ZSL
-# wandb.agent("7x3d1w38", function=main, count=None, project="final-mestrado") # ViT GZSL
-# wandb.agent("vujckf5s", function=main, count=None, project="final-mestrado") # VGG ZSL
-# wandb.agent("nro55npm", function=main, count=None, project="final-mestrado") # VGG GZSL
-# wandb.agent("cjbq57tk", function=main, count=None, project="final-mestrado") # MobileNet ZSL
-# wandb.agent("q6rp6xhd", function=main, count=None, project="final-mestrado") # MobileNet GZSL
+# wandb.agent("o2ctlezk", function=main, count=None, project="final-mestrado") # ResNet GZSL

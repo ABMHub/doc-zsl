@@ -1,6 +1,6 @@
 import pandas as pd
 
-splits = "./splits.csv"
+splits = "./dataset/active_labeling/loop4/splits_loop4.csv"
 
 modals = ["zsl_split", "gzsl_split"]
 
@@ -49,4 +49,4 @@ for modal in modals:
             out["is_equal"].append(0)
 
 protocol = pd.DataFrame(out)
-protocol.to_csv("./protocol.csv")
+protocol.to_csv("./dataset/active_labeling/loop4/protocols_loop4.csv")
