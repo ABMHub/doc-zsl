@@ -213,4 +213,4 @@ sweep_config = {
 # sweep_id = wandb.sweep(sweep_config, project="final-mestrado")
 # exit()
 
-# wandb.agent("o2ctlezk", function=main, count=None, project="final-mestrado") # ResNet GZSL
+wandb.agent("o2ctlezk", function=main, count=None, project="final-mestrado") # ResNet ZSL
