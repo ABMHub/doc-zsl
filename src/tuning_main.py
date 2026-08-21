@@ -42,7 +42,7 @@ def main(config=None):
       # "7lf8d44y": (AlexNet, "AlexNet"),
       # "e78xp1o1": (EfficientNet, "EfficientNet"),
       # "q6rp6xhd": (MobileNetV3, "MobileNet"),
-      "o2ctlezk": (ResNet, "ResNet"),
+      "ca9b3q7h": (ResNet, "ResNet"),
       # "7x3d1w38": (Vit, "ViT"),
       # "nro55npm": (VGG, "VGG"),
     }
@@ -66,7 +66,7 @@ def main(config=None):
     img_shape = (model.im_shape, model.im_shape)
     model = SiameseModel(model)
 
-    csv_path = f"./dataset/active_labeling/loop4/splits/train_{split_mode}_loop4.csv"
+    csv_path = f"./dataset/active_labeling/loop8/splits/train_{split_mode}_loop8.csv"
     df = pd.read_csv(csv_path, index_col=0)
     # split_string = "split"
     # df = df.rename(columns={split_string: "train"})
@@ -75,19 +75,20 @@ def main(config=None):
     df.loc[df["split"] > 0, "split"] = 0
     df.loc[df["split"] == -1, "split"] = 1
 
-    protocol_path = "./dataset/active_labeling/loop4/protocols/val_protocol_loop4.csv"
+    protocol_path = "./dataset/active_labeling/loop8/protocols/train_protocol_loop8.csv"
     protocol = pd.read_csv(protocol_path)
     protocol = protocol[(protocol["split_mode"] == f"{split_mode}_split") & (protocol["split_number"] == split_number)]
 
-    test_csv_path = f"./dataset/active_labeling/loop4/splits/test_{split_mode}_loop4.csv"
+    test_csv_path = f"./dataset/active_labeling/loop8/splits/test_{split_mode}_loop8.csv"
     test_df = pd.read_csv(test_csv_path, index_col=0)
     test_df.insert(len(test_df.columns), "split", 1)
-    test_protocol_path = "./dataset/active_labeling/loop4/protocols/test_protocol_loop4.csv"
+    test_protocol_path = "./dataset/active_labeling/loop8/protocols/test_protocol_loop8.csv"
     test_protocol = pd.read_csv(test_protocol_path)
     test_protocol = test_protocol[(test_protocol["split_mode"] == f"{split_mode}_split")]
 
     load_dotenv()
-    dataset_path = os.getenv("DATASET_PATH", "./")
+    #dataset_path = os.getenv("DATASET_PATH", "./")
+    dataset_path = "/home/mari/pibic/flat"
     def process_doc_path(row: pd.DataFrame):
       path = row["doc_path"]
       c = row["class_name"]
@@ -96,8 +97,8 @@ def main(config=None):
     df["doc_path"] = df.apply(process_doc_path, axis=1)
     test_df["doc_path"] = test_df.apply(process_doc_path, axis=1)
 
-    train_loader = DocDataset(df, train=True, load_in_ram=True, img_shape=img_shape, n_channels=n_channels)
-    val_loader = DocDataset(df, train=False, load_in_ram=True, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
+    train_loader = DocDataset(df, train=True, load_in_ram=False, img_shape=img_shape, n_channels=n_channels)
+    val_loader = DocDataset(df, train=False, load_in_ram=False, img_shape=img_shape, mean=train_loader.mean, std=train_loader.std, n_channels=n_channels)
     test_loader = DocDataset(test_df, train=False, load_in_ram=False, img_shape=img_shape, n_channels=n_channels, mean=train_loader.mean, std=train_loader.std)
 
     train_loader = ContrastivePairLoader(train_loader, None)
@@ -150,6 +151,8 @@ def main(config=None):
     mc_last = f"{models_folder}/{project_name}/{run_name}_last.pt"
     mc = ModelCheckpoint(mc_last, mc_best)
 
+    wandb.watch(model, log_freq=10)
+ 
     train(
       config = config,
       train_dataloader = train_loader,
@@ -210,7 +213,7 @@ sweep_config = {
   "parameters": parameters_dict
 }
 
-# sweep_id = wandb.sweep(sweep_config, project="final-mestrado")
-# exit()
+#sweep_id = wandb.sweep(sweep_config, project="pibic")
+#exit()
 
-wandb.agent("o2ctlezk", function=main, count=None, project="final-mestrado") # ResNet ZSL
+wandb.agent("ca9b3q7h", function=main, count=None, project="pibic") # ResNet ZSL

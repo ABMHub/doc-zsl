@@ -1,13 +1,13 @@
 import pandas as pd
 import os
 
-source_splits_path = "./dataset/active_labeling/loop4/splits_loop4.csv"
-source_protocols_path = "./dataset/active_labeling/loop4/protocols_loop4.csv"
-dest_base_path = "./dataset/active_labeling/loop4/"
-dest_splits_path = "./dataset/active_labeling/loop4/splits"
-dest_protocols_path = "./dataset/active_labeling/loop4/protocols"
+source_splits_path = "./dataset/active_labeling/loop8/splits_loop8.csv"
+source_protocols_path = "./dataset/active_labeling/loop8/protocols_loop8.csv"
+dest_base_path = "./dataset/active_labeling/loop8/"
+dest_splits_path = "./dataset/active_labeling/loop8/splits"
+dest_protocols_path = "./dataset/active_labeling/loop8/protocols"
 
-suffix = 'loop4'
+suffix = 'loop8'
 
 df = pd.read_csv(source_splits_path)
 
